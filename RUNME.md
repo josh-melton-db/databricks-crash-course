@@ -1,536 +1,332 @@
-# Databricks Crash Course: Getting Started Guide
+# IoT Time Series Analysis - Quick Start Guide
 
-This guide walks you through the complete setup and deployment of the IoT Time Series Analysis crash course using modern Databricks practices.
+This guide gets you up and running with the IoT Time Series Analysis demo in under 10 minutes.
 
-## What You'll Learn
+## What You'll Build
 
-By the end of this crash course, you'll understand:
-- How to build declarative data pipelines with Python
-- Infrastructure as code using Databricks Asset Bundles
-- Time series analysis at scale with Tempo
-- Data quality management with expectations
-- Real-time monitoring with dashboards and alerts
+A complete IoT analytics pipeline with:
+- **400,000+ sensor readings** from 60 simulated IoT devices
+- **Bronze/Silver/Gold tables** in Unity Catalog
+- **Time series features** using the Tempo library
+- **Anomaly detection** based on physics-based rules
+- **Business metrics** aggregated by device, factory, and model
 
 ## Prerequisites
 
-Before you begin, ensure you have:
+✅ Databricks workspace with Unity Catalog enabled  
+✅ ML Runtime cluster (DBR 14.3 ML or later)  
+✅ Permissions to create schemas, tables, and volumes
 
-1. **Databricks Workspace Access**
-   - Unity Catalog enabled workspace
-   - Permissions to create catalogs, schemas, volumes, and pipelines
-   - Access to a SQL Warehouse
+## Setup Steps
 
-2. **Local Development Environment**
-   - Databricks CLI installed ([installation guide](https://docs.databricks.com/dev-tools/cli/install.html))
-   - Git (to clone the repository)
-   - Python 3.10+ (optional, for local development)
+### 1. Import the Notebook
 
-3. **Cluster Requirements**
-   - Unity Catalog enabled ML Runtime cluster (DBR 15.4 ML recommended)
-   - For the setup notebook only - pipelines run on Databricks serverless compute
-
-## Step-by-Step Setup
-
-### Step 1: Clone the Repository
+Download or clone this repository, then import `setup_and_run.py` into your Databricks workspace:
 
 ```bash
-git clone https://github.com/josh-melton-db/databricks-crash-course.git
-cd databricks-crash-course
+# Option 1: Use Databricks CLI
+databricks workspace import setup_and_run.py /Users/your.email@company.com/iot_setup
+
+# Option 2: Use the UI
+# Navigate to Workspace → Import → Upload the file
 ```
 
-### Step 2: Authenticate with Databricks
+### 2. Configure (Optional)
 
-```bash
-databricks auth login --host https://your-workspace-url.cloud.databricks.com
+Open the notebook and edit these parameters if needed:
+
+```python
+CATALOG = 'default'  # Change to your catalog
+SCHEMA = None        # Leave as None to auto-generate
+NUM_ROWS = 400000    # Number of sensor readings
+NUM_DEVICES = 60     # Number of IoT devices
 ```
 
-Follow the prompts to complete authentication. Your credentials will be saved for future commands.
+### 3. Run the Notebook
 
-### Step 3: Run the Setup Notebook
+1. Attach the notebook to a cluster with **ML Runtime 14.3+**
+2. Click **Run All**
+3. Wait 3-5 minutes for completion
 
-The setup notebook creates Unity Catalog resources and generates sample IoT data.
+The notebook will:
+- ✅ Install required libraries (databricks-sdk, dbl-tempo)
+- ✅ Create Unity Catalog schema and volumes
+- ✅ Generate synthetic IoT data
+- ✅ Create Bronze/Silver/Gold tables
+- ✅ Display summary statistics
 
-1. **Import the notebook to your workspace**
-   ```bash
-   databricks workspace import 00_setup.py /Users/your.email@company.com/iot_crash_course_setup -f PYTHON
-   ```
+### 4. Verify Setup
 
-2. **Open the notebook in Databricks UI**
-   - Navigate to your workspace
-   - Find the `iot_crash_course_setup` notebook
-   - Attach it to a Unity Catalog-enabled cluster with ML Runtime 15.4
+Check that tables were created:
 
-3. **Run the notebook**
-   - Execute all cells in order
-   - Note the catalog and schema names (you'll need these)
-   - Wait for data generation (~1-2 minutes for ~400,000 rows)
+```sql
+-- List all tables
+SHOW TABLES IN <catalog>.<schema>;
 
-**What the setup creates:**
-- Unity Catalog schema
-- Three volumes (sensor_bronze, inspection_bronze, iot_checkpoints)
-- Sample IoT sensor and inspection data in CSV format
-
-### Step 4: Get SQL Warehouse ID
-
-You need a SQL Warehouse ID for dashboard and alert resources.
-
-```bash
-databricks warehouses list
+-- Should see:
+-- sensor_bronze
+-- inspection_bronze
+-- anomaly_detected
+-- inspection_silver
+-- inspection_gold
 ```
 
-Example output:
-```
-ID                                    Name              State
-abc123def456ghi789                    Serverless SQL    RUNNING
-```
-
-Copy the ID (e.g., `abc123def456ghi789`).
-
-### Step 5: Deploy with Asset Bundles
-
-Deploy all resources (pipeline, dashboard, alert) with a single command:
-
-```bash
-databricks bundle deploy -t dev --var="warehouse_id=abc123def456ghi789"
-```
-
-**What this deploys:**
-- **Declarative Pipeline**: All bronze/silver/gold tables with dependencies
-- **Lakeview Dashboard**: Visualizations for defect rates and trends
-- **SQL Alert**: Automated notifications for anomalies
-
-**Optional customization:**
-
-```bash
-databricks bundle deploy -t dev \
-  --var="warehouse_id=abc123def456ghi789" \
-  --var="catalog=my_catalog" \
-  --var="schema=my_custom_schema"
-```
-
-### Step 6: Run the Pipeline
-
-Execute the pipeline to process your data:
-
-```bash
-databricks bundle run iot_anomaly_detection_pipeline -t dev
-```
-
-**Alternative: Run from UI**
-1. Navigate to **Workflows** > **Lakeflow Pipelines**
-2. Find `iot_anomaly_detection_<your-username>`
-3. Click **Start**
-
-**Pipeline execution:**
-- **Bronze Layer**: Ingests raw CSV files using Auto Loader
-- **Silver Layer**: Engineers time series features, detects anomalies
-- **Gold Layer**: Aggregates metrics by device, factory, and model
-
-Watch the execution graph in real-time to see data flowing through the pipeline!
-
-### Step 7: Explore Results
-
-**View the Dashboard**
-
-1. Navigate to **Dashboards** 
-2. Find `IoT Anomaly Detection - <your-username>`
-3. Explore visualizations:
-   - Defect rates by factory (bar chart)
-   - Weekly inspection trends (stacked bars)
-   - Temperature vs. defects (scatter plot)
-   - Density vs. defects (scatter plot)
-
-**Configure the Alert**
-
-1. Navigate to **SQL** > **Alerts**
-2. Find `IoT Anomaly Detection Alert - <your-username>`
-3. Review the query (counts defects in last 10 minutes)
-4. Click **Edit** to configure:
-   - Add email recipients
-   - Adjust threshold if needed
-   - Set notification frequency
-5. Click **Unmute** to activate
-
-**Query the Tables**
-
-Open a SQL editor and explore:
+Query the data:
 
 ```sql
 -- Bronze: Raw sensor data
 SELECT * FROM <catalog>.<schema>.sensor_bronze LIMIT 10;
 
 -- Silver: Anomalies detected
-SELECT 
-  device_id,
-  timestamp,
-  temperature,
-  air_pressure,
-  rotation_speed,
-  delay
-FROM <catalog>.<schema>.anomaly_detected 
-WHERE timestamp > current_timestamp() - INTERVAL 1 DAY;
+SELECT COUNT(*) as anomaly_count 
+FROM <catalog>.<schema>.anomaly_detected;
 
--- Gold: Defect rates by factory
+-- Gold: Aggregated metrics
+SELECT * FROM <catalog>.<schema>.inspection_gold 
+ORDER BY count DESC LIMIT 10;
+```
+
+## What Did I Just Create?
+
+### Bronze Layer (Raw Data)
+
+**`sensor_bronze`**: ~400,000 sensor readings
+- device_id, trip_id, factory_id, model_id
+- timestamp, temperature, air_pressure
+- rotation_speed, airflow_rate, density, delay
+
+**`inspection_bronze`**: ~1,600 inspection records
+- device_id, timestamp, defect (0 or 1)
+
+### Silver Layer (Feature Engineering)
+
+**`anomaly_detected`**: Threshold-based anomaly detection
+- Flags readings with extreme values:
+  - High delay + high rotation speed
+  - Excessive temperature
+  - High density + low air pressure
+
+**`inspection_silver`**: Time series features
+- Exponential moving average on rotation speed
+- Hourly resampling of sensor data
+- As-of join (attach most recent sensor data to each inspection)
+
+### Gold Layer (Business Metrics)
+
+**`inspection_gold`**: Aggregated metrics
+- Grouped by: device_id, factory_id, model_id, defect
+- Average temperature, density, delay, rotation speed, air pressure
+- Inspection counts
+
+## Next Steps
+
+### Explore the Data
+
+**Defect rates by factory:**
+```sql
 SELECT 
   factory_id,
-  SUM(CASE WHEN defect = 1 THEN count ELSE 0 END) AS defect_count,
-  SUM(count) AS total_count,
-  ROUND(100.0 * SUM(CASE WHEN defect = 1 THEN count ELSE 0 END) / SUM(count), 2) AS defect_rate_pct
+  SUM(CASE WHEN defect = 1 THEN count ELSE 0 END) as defects,
+  SUM(count) as total_inspections,
+  ROUND(100.0 * SUM(CASE WHEN defect = 1 THEN count ELSE 0 END) / SUM(count), 2) as defect_rate_pct
 FROM <catalog>.<schema>.inspection_gold
 GROUP BY factory_id
 ORDER BY defect_rate_pct DESC;
 ```
 
-### Step 8: Test Incremental Processing
+**Recent anomalies:**
+```sql
+SELECT device_id, factory_id, model_id, timestamp, temperature, rotation_speed
+FROM <catalog>.<schema>.anomaly_detected
+ORDER BY timestamp DESC
+LIMIT 20;
+```
 
-Learn how declarative pipelines handle incremental data:
+**Temperature distribution:**
+```sql
+SELECT 
+  FLOOR(temperature / 10) * 10 as temp_bucket,
+  COUNT(*) as reading_count
+FROM <catalog>.<schema>.sensor_bronze
+WHERE temperature IS NOT NULL
+GROUP BY temp_bucket
+ORDER BY temp_bucket;
+```
 
-1. **Import the insights notebook**
-   ```bash
-   databricks workspace import 04_actionable_insights.py /Users/your.email@company.com/iot_incremental_test -f PYTHON
-   ```
+### Build Dashboards
 
-2. **Run the notebook**
-   - This lands ~10,000 additional rows in the volumes
-   - No changes to existing data
+Create visualizations on the gold layer:
 
-3. **Re-run the pipeline**
-   ```bash
-   databricks bundle run iot_anomaly_detection_pipeline -t dev
-   ```
+1. Navigate to **Dashboards** → **Create Dashboard**
+2. Add visualizations:
+   - Bar chart: Defect rates by factory
+   - Line chart: Temperature trends over time
+   - Scatter plot: Temperature vs defect correlation
+3. Use queries from the "Explore the Data" section above
 
-4. **Observe the magic** ✨
-   - Open the pipeline event logs
-   - Notice **only new files** are processed by Auto Loader
-   - Materialized views use optimized strategies:
-     - `GROUP_AGGREGATE`: Only recompute changed groups
-     - `PARTITION_OVERWRITE`: Only update affected partitions
-   - Much faster than full reprocessing!
+### Add More Data
 
-5. **Refresh the dashboard**
-   - Metrics update with new data
-   - Charts show additional data points
+Generate additional data to test incremental processing:
 
-**Key learning:** Declarative pipelines automatically optimize for incremental processing. You don't write merge logic - the platform handles it!
-
-## Understanding What You Built
-
-### Pipeline Architecture
-
-**Bronze Layer** (`src/bronze/`)
 ```python
-@dp.table(name="sensor_bronze")
-@dp.expect("valid pressure", "air_pressure > 0")
-def sensor_bronze():
-    return spark.readStream.format("cloudFiles").load(...)
-```
-- Streaming tables for continuous ingestion
-- Auto Loader handles schema evolution
-- Expectations flag data quality issues
+# In a new notebook cell
+from util.data_generator import land_more_data
+from util.onboarding_setup import dgconfig, new_data_config
 
-**Silver Layer** (`src/silver/`)
+# Generate 50,000 more rows for 20 devices
+new_config = new_data_config(dgconfig, rows=50000, devices=20)
+land_more_data(spark, dbutils, config, new_config)
+
+# Re-run the table creation cells to include new data
+```
+
+### Experiment with Time Series Features
+
+Try different Tempo operations in the `inspection_silver` logic:
+
 ```python
-@dp.materialized_view(name="inspection_silver")
-def inspection_silver():
-    sensors_tsdf = TSDF(...).EMA("rotation_speed", window=5)
-    return inspections_tsdf.asofJoin(sensors_tsdf).df
-```
-- Materialized views for complex transformations
-- Tempo for time series operations
-- As-of joins prevent data leakage
+# Different EMA window
+sensors_tsdf.EMA("rotation_speed", window=10)
 
-**Gold Layer** (`src/gold/`)
+# Different resampling frequency
+sensors_tsdf.resample(freq="30 minutes", func="mean")
+
+# Add interpolation for missing values
+sensors_tsdf.interpolate("temperature", method="linear")
+```
+
+## Understanding the Code
+
+### Time Series Operations (Tempo)
+
+The notebook uses Tempo for distributed time series analysis:
+
 ```python
-@dp.materialized_view(name="inspection_gold")
-def inspection_gold():
-    return silver.groupBy(...).agg(...)
-```
-- Business-level aggregations
-- Optimized incremental updates
-- Ready for BI tools and dashboards
+from tempo import TSDF
 
-### Key Concepts
-
-**Declarative vs Imperative**
-- **Declarative**: Describe *what* you want (pipeline figures out *how*)
-- **Imperative**: Explicitly code every step
-
-**Streaming Tables vs Materialized Views**
-- **Streaming Table**: Continuous processing, append-only semantics
-- **Materialized View**: Batch processing, full CRUD operations
-
-**Auto Loader Benefits**
-- Processes only new files
-- Handles schema changes gracefully
-- Exactly-once processing guarantees
-
-**Tempo for Time Series**
-- Distributed processing of time series operations
-- Built for PySpark scale
-- Handles irregular timestamps and missing data
-
-## Production Deployment
-
-Ready to deploy to production?
-
-### Step 1: Review Configuration
-
-Edit `databricks.yml` prod target:
-- Adjust cluster sizes for expected load
-- Set notification recipients
-- Configure catalog/schema for production
-
-### Step 2: Deploy to Production
-
-```bash
-databricks bundle deploy -t prod \
-  --var="warehouse_id=<prod-warehouse-id>" \
-  --var="catalog=prod_catalog" \
-  --var="schema=iot_production"
-```
-
-### Step 3: Validate
-
-1. Run the pipeline in prod environment
-2. Verify data quality in event logs
-3. Test dashboard access for stakeholders
-4. Confirm alert notifications work
-
-### Step 4: Set Up Continuous Execution (Optional)
-
-For real-time processing:
-1. Open the pipeline in Databricks UI
-2. Click **Settings**
-3. Change **Pipeline Mode** to **Continuous**
-4. Save and restart
-
-Or schedule periodic execution:
-```bash
-# Configure in databricks.yml or create a separate job
-databricks jobs create --json '{
-  "name": "IoT Pipeline Scheduled",
-  "schedule": {"quartz_cron_expression": "0 0 * * * ?", "timezone_id": "UTC"},
-  "tasks": [{"pipeline_task": {"pipeline_id": "..."}}]
-}'
-```
-
-## Configuration and Customization
-
-### Environment Variables
-
-Create `.env` file for easier configuration:
-
-```bash
-# Databricks workspace
-DATABRICKS_HOST=https://your-workspace.cloud.databricks.com
-DATABRICKS_TOKEN=<your-token>
-
-# Deployment variables
-warehouse_id=abc123def456
-catalog=default
-schema=iot_anomaly_detection_myname
-```
-
-Deploy without inline variables:
-```bash
-databricks bundle deploy -t dev
-```
-
-### Customizing the Pipeline
-
-**Modify anomaly detection rules:**
-
-Edit `src/silver/anomaly_detected.py`:
-```python
-bronze.where(
-    ((col("delay") > 200) & (col("rotation_speed") > 900)) |  # Your thresholds
-    (col("temperature") > 110) |
-    ((col("density") > 5.0) & (col("air_pressure") < 800))
+# Create Time Series DataFrame
+sensors_tsdf = TSDF(
+    raw_sensors,
+    ts_col="timestamp",
+    partition_cols=["device_id", "trip_id", "factory_id", "model_id"]
 )
+
+# Apply operations
+sensors_tsdf = (
+    sensors_tsdf
+    .EMA("rotation_speed", window=5)      # Exponential moving average
+    .resample(freq="1 hour", func="mean")  # Resample to hourly
+)
+
+# As-of join (temporal join without future data)
+result = inspections_tsdf.asofJoin(sensors_tsdf, right_prefix="sensor")
 ```
 
-**Change time series features:**
+**Key Concept: As-of Join**
+- Attaches the most recent sensor reading that occurred BEFORE each inspection
+- Prevents data leakage (don't use future data to predict the past)
+- Critical for building valid predictive models
 
-Edit `src/silver/inspection_silver.py`:
-```python
-.EMA("rotation_speed", window=10)  # Different window size
-.resample(freq="30 minutes", func="mean")  # Different granularity
-```
+### Medallion Architecture
 
-**Add new tables:**
+**Bronze (Raw)**: Ingest as-is, minimal processing
+- Preserve original data
+- Handle schema evolution
+- Flag data quality issues
 
-1. Create `src/silver/new_feature.py`:
-```python
-from pyspark import pipelines as dp
+**Silver (Enriched)**: Clean, transform, enrich
+- Fix data quality problems
+- Engineer features
+- Join related datasets
 
-@dp.materialized_view(name="new_feature")
-def new_feature():
-    return spark.read.table("sensor_bronze").groupBy(...).agg(...)
-```
-
-2. Add to `databricks.yml`:
-```yaml
-libraries:
-  - file:
-      path: ./src/silver/new_feature.py
-```
-
-3. Redeploy:
-```bash
-databricks bundle deploy -t dev
-```
-
-### Using Your Own Data
-
-Replace synthetic data with real IoT data:
-
-1. **Update source paths** in `src/bronze/*.py`:
-```python
-sensor_landing = f"/Volumes/{catalog}/{schema}/my_real_sensors"
-```
-
-2. **Adjust schema hints**:
-```python
-schema_hints = "device_id string, timestamp timestamp, temperature float, ..."
-```
-
-3. **Modify feature engineering** in silver layer to match your use case
-
-4. **Update business logic** in gold layer for your KPIs
+**Gold (Aggregated)**: Business-level metrics
+- Aggregate by key dimensions
+- Pre-compute common queries
+- Optimize for BI tools
 
 ## Troubleshooting
 
-### Common Issues
+### "Catalog not found" error
 
-**❌ Pipeline fails: "Schema not found"**
-
-✅ **Solution:**
-```bash
-# Verify setup notebook ran successfully
-databricks sql execute --warehouse-id <id> "SHOW SCHEMAS IN <catalog>"
-
-# Check catalog/schema match in databricks.yml
-grep -A 2 "catalog:" databricks.yml
-```
-
-**❌ Error: "Warehouse not found" during deployment**
-
-✅ **Solution:**
-```bash
-# List available warehouses
-databricks warehouses list
-
-# Use a valid ID
-databricks bundle deploy -t dev --var="warehouse_id=<correct-id>"
-```
-
-**❌ Pipeline runs but tables are empty**
-
-✅ **Solution:**
-1. Check data exists in volumes:
-```bash
-databricks fs ls /Volumes/<catalog>/<schema>/sensor_bronze/
-```
-2. Review event logs for dropped records
-3. Check if expectations are too strict
-
-**❌ Tempo errors in silver layer**
-
-✅ **Solution:**
-- Verify using ML Runtime (not standard Runtime)
-- Check dbl-tempo>=0.1.30 in cluster libraries
-- Review TSDF initialization - ensure timestamp column exists
-
-**❌ Dashboard shows no data**
-
-✅ **Solution:**
-1. Verify pipeline completed successfully
-2. Run query manually to test:
+**Solution**: Use a different catalog or create one
 ```sql
-SELECT COUNT(*) FROM <catalog>.<schema>.inspection_gold;
-```
-3. Check table name replacements in dashboard JSON
-4. Refresh the dashboard
-
-### Validation Commands
-
-**Check bundle configuration:**
-```bash
-databricks bundle validate -t dev
+CREATE CATALOG my_catalog;
 ```
 
-**List deployed resources:**
-```bash
-databricks bundle resources -t dev
+Then update the notebook:
+```python
+CATALOG = 'my_catalog'
 ```
 
-**View pipeline status:**
-```bash
-databricks pipelines get <pipeline-id>
+### "Module tempo not found" error
+
+**Solution**: Ensure you're using ML Runtime, not standard Runtime
+- In cluster configuration, select "Machine Learning" runtime
+- The notebook installs tempo automatically, but it requires ML dependencies
+
+### "Out of memory" during data generation
+
+**Solution**: Reduce the data volume
+```python
+NUM_ROWS = 100000   # Smaller dataset
+NUM_DEVICES = 20    # Fewer devices
 ```
 
-### Clean Up and Redeploy
+### Tables created but empty
 
-If you need to start fresh:
-
-```bash
-# Destroy all bundle resources
-databricks bundle destroy -t dev
-
-# Optionally drop schema (loses all data!)
-databricks sql execute --warehouse-id <id> "DROP SCHEMA <catalog>.<schema> CASCADE"
-
-# Redeploy from scratch
-databricks bundle deploy -t dev --var="warehouse_id=<id>"
+**Solution**: Check volumes have data
+```python
+display(dbutils.fs.ls(f"/Volumes/{CATALOG}/{SCHEMA}/sensor_data"))
 ```
 
-## Next Steps in Your Learning
+If empty, re-run the "Generate and Land Data" cells.
 
-### Extend This Project
+## Architecture Diagram
 
-- **Add ML models**: Build predictive maintenance models using engineered features
-- **Implement streaming**: Switch to continuous mode for real-time processing
-- **Add more visualizations**: Enhance the dashboard with custom charts
-- **Integrate external data**: Join with weather, maintenance logs, or production schedules
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Unity Catalog                           │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Volumes (CSV Files)           Tables (Delta)              │
+│  ┌──────────────────┐         ┌────────────────────────┐  │
+│  │ sensor_data/     │────────▶│ sensor_bronze         │  │
+│  │ inspection_data/ │─┐       │ inspection_bronze     │  │
+│  └──────────────────┘ │       └───────────┬────────────┘  │
+│                       │                   │               │
+│                       │       ┌───────────▼────────────┐  │
+│                       └──────▶│ inspection_silver     │  │
+│                               │ anomaly_detected      │  │
+│                               └───────────┬────────────┘  │
+│                                           │               │
+│                               ┌───────────▼────────────┐  │
+│                               │ inspection_gold       │  │
+│                               └────────────────────────┘  │
+│                                                            │
+└────────────────────────────────────────────────────────────┘
+```
 
-### Learn More Databricks Concepts
+## What's Next?
 
-- **Unity Catalog**: Fine-grained access control and data governance
-- **Photon**: Accelerated query engine for faster processing
-- **Databricks SQL**: BI and analytics on your lakehouse
-- **MLflow**: Experiment tracking and model deployment
-- **Workflows**: Orchestrate complex data and ML pipelines
+### Learn More About:
 
-### Explore Advanced Topics
+- **Time Series Analysis**: [Tempo Documentation](https://databrickslabs.github.io/tempo/)
+- **Unity Catalog**: [Governance Guide](https://docs.databricks.com/data-governance/unity-catalog/)
+- **Medallion Architecture**: [Best Practices](https://www.databricks.com/glossary/medallion-architecture)
 
-- **CDC (Change Data Capture)**: Track changes in source systems
-- **SCD (Slowly Changing Dimensions)**: Handle historical data
-- **Data Mesh**: Implement domain-oriented data architecture
-- **Cost Optimization**: Monitor and optimize compute spend
+### Extend This Demo:
 
-## Additional Resources
+- Build machine learning models on the silver layer features
+- Create real-time streaming pipelines
+- Integrate with external data sources
+- Deploy dashboards for stakeholders
 
-### Official Documentation
-- [Lakeflow Spark Declarative Pipelines](https://docs.databricks.com/aws/en/ldp/developer/python-dev)
-- [Databricks Asset Bundles](https://docs.databricks.com/dev-tools/bundles/)
-- [Tempo Library](https://databrickslabs.github.io/tempo/)
-- [Unity Catalog](https://docs.databricks.com/data-governance/unity-catalog/)
+## Questions or Issues?
 
-### Learning Resources
-- [Databricks Academy](https://academy.databricks.com/)
-- [Medallion Architecture Guide](https://www.databricks.com/glossary/medallion-architecture)
-- [Data Engineering Best Practices](https://www.databricks.com/discover/data-engineering-best-practices)
-
-### Community
-- [Databricks Community Forums](https://community.databricks.com/)
-- [GitHub Discussions](https://github.com/josh-melton-db/databricks-crash-course/discussions)
+- Check the main README.md for detailed documentation
+- File issues on the GitHub repository
+- Contact: josh.melton@databricks.com
 
 ---
 
-**Questions or Issues?**
-
-File an issue: [databricks-crash-course/issues](https://github.com/josh-melton-db/databricks-crash-course/issues)
-
-**Want to Contribute?**
-
-Pull requests welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+**That's it!** You now have a complete IoT analytics pipeline in Unity Catalog. Start querying, building dashboards, or extending the demo with your own use cases.
