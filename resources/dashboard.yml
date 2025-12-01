@@ -1,0 +1,20 @@
+resources:
+  dashboards:
+    iot_anomaly_detection_dashboard:
+      display_name: "IoT Anomaly Detection - ${workspace.current_user.short_name}"
+      warehouse_id: ${var.warehouse_id}
+      parent_path: ${workspace.file_path}/dashboard
+      
+      file_path: ./config/IOT Anomaly Detection.lvdash.json
+      
+      # The dashboard JSON file uses placeholder table names that need to be replaced
+      # with actual table names during deployment. The following replaces:
+      # <sensor_table> -> ${var.catalog}.${var.schema}.sensor_bronze
+      # <inspection_table> -> ${var.catalog}.${var.schema}.inspection_bronze
+      # <silver_table> -> ${var.catalog}.${var.schema}.inspection_silver
+      # <gold_table> -> ${var.catalog}.${var.schema}.inspection_gold
+
+variables:
+  warehouse_id:
+    description: SQL Warehouse ID for dashboard queries
+    # Users need to provide their warehouse ID or the bundle will attempt to use a default

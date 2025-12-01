@@ -1,0 +1,16 @@
+# IoT Time Series Analysis Solution Accelerator
+# Python dependencies for local development and testing
+
+# Core Databricks dependencies
+databricks-sdk>=0.35.0
+
+# Time series analysis
+dbl-tempo>=0.1.30
+
+# Data processing (usually included in Databricks Runtime)
+pyspark>=3.5.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# For local testing (optional)
+# databricks-connect>=15.0.0
