@@ -1,16 +1,16 @@
 # Databricks notebook source
 # MAGIC %md
 # MAGIC # IoT Time Series Analysis - Simple Setup
-# MAGIC 
+# MAGIC
 # MAGIC This notebook sets up the complete IoT anomaly detection demo by:
 # MAGIC 1. Creating Unity Catalog schema and volumes
 # MAGIC 2. Generating synthetic IoT sensor and inspection data
 # MAGIC 3. Creating Bronze, Silver, and Gold tables
-# MAGIC 
+# MAGIC
 # MAGIC **Prerequisites:**
 # MAGIC - Unity Catalog enabled workspace
 # MAGIC - DBR 14.3 ML or later (for Tempo library support)
-# MAGIC 
+# MAGIC
 # MAGIC **Simply click "Run All" to set up the complete demo!**
 
 # COMMAND ----------
@@ -24,11 +24,11 @@
 # DBTITLE 1,Configuration
 # Configure your catalog and schema here
 CATALOG = 'default'  # Change to your catalog name
-SCHEMA = None  # Leave as None to auto-generate, or set to your schema name
+SCHEMA = 'db_crash_course'  # Leave as None to auto-generate, or set to your schema name
 
 # Data generation parameters
-NUM_ROWS = 400000  # Number of sensor readings to generate
-NUM_DEVICES = 60   # Number of IoT devices
+NUM_ROWS = 5_000_000  # Number of sensor readings to generate
+NUM_DEVICES = 700   # Number of IoT devices
 
 print(f"Configuration:")
 print(f"  Catalog: {CATALOG}")
@@ -88,7 +88,7 @@ print("\n✅ Schema and volumes created successfully!")
 
 # MAGIC %md
 # MAGIC ## Generate Synthetic IoT Data
-# MAGIC 
+# MAGIC
 # MAGIC This section generates realistic IoT sensor data with:
 # MAGIC - Temperature, air pressure, rotation speed, airflow rate, density, delay
 # MAGIC - Time series patterns (seasonality, trends, noise)
@@ -366,7 +366,7 @@ print("\n✅ Data landing complete!")
 
 # MAGIC %md
 # MAGIC ## Create Bronze Layer Tables
-# MAGIC 
+# MAGIC
 # MAGIC Bronze layer loads raw data from volumes with minimal transformations.
 
 # COMMAND ----------
@@ -436,7 +436,7 @@ print(f"✅ Created table: {CATALOG}.{SCHEMA}.inspection_bronze\n")
 
 # MAGIC %md
 # MAGIC ## Create Silver Layer Tables
-# MAGIC 
+# MAGIC
 # MAGIC Silver layer performs data quality fixes, feature engineering, and joins.
 
 # COMMAND ----------
@@ -523,7 +523,7 @@ print(f"✅ Created table: {CATALOG}.{SCHEMA}.inspection_silver\n")
 
 # MAGIC %md
 # MAGIC ## Create Gold Layer Table
-# MAGIC 
+# MAGIC
 # MAGIC Gold layer provides aggregated business metrics.
 
 # COMMAND ----------
@@ -556,28 +556,28 @@ print(f"✅ Created table: {CATALOG}.{SCHEMA}.inspection_gold\n")
 
 # MAGIC %md
 # MAGIC ## Setup Complete! 🎉
-# MAGIC 
+# MAGIC
 # MAGIC All tables have been created successfully. You can now query the data:
-# MAGIC 
+# MAGIC
 # MAGIC ### Bronze Tables (Raw Data)
 # MAGIC ```sql
 # MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.sensor_bronze LIMIT 10;
 # MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.inspection_bronze LIMIT 10;
 # MAGIC ```
-# MAGIC 
+# MAGIC
 # MAGIC ### Silver Tables (Enriched & Feature Engineered)
 # MAGIC ```sql
 # MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.anomaly_detected LIMIT 10;
 # MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.inspection_silver LIMIT 10;
 # MAGIC ```
-# MAGIC 
+# MAGIC
 # MAGIC ### Gold Table (Business Metrics)
 # MAGIC ```sql
 # MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.inspection_gold ORDER BY count DESC LIMIT 10;
 # MAGIC ```
-# MAGIC 
+# MAGIC
 # MAGIC ### Sample Queries
-# MAGIC 
+# MAGIC
 # MAGIC **Defect rate by factory:**
 # MAGIC ```sql
 # MAGIC SELECT 
@@ -589,7 +589,7 @@ print(f"✅ Created table: {CATALOG}.{SCHEMA}.inspection_gold\n")
 # MAGIC GROUP BY factory_id
 # MAGIC ORDER BY defect_rate_pct DESC;
 # MAGIC ```
-# MAGIC 
+# MAGIC
 # MAGIC **Recent anomalies:**
 # MAGIC ```sql
 # MAGIC SELECT device_id, factory_id, model_id, timestamp, temperature, rotation_speed, density
@@ -620,8 +620,3 @@ print(f"    • {CHECKPOINT_PATH}")
 print("\n" + "="*80)
 print("Next steps: Query the tables or build dashboards on top of this data!".center(80))
 print("="*80)
-
-# COMMAND ----------
-
-
-
