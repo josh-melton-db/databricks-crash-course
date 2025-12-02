@@ -130,4 +130,16 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Project-specific configuration
 util/configuration.py
+setup/util/configuration.py
+
+# Python cache in all directories
+**/__pycache__/
+
+# Databricks CLI config (if present)
+.databrickscfg
+
+# Local test data and checkpoints
+*.checkpoint/
+checkpoints/
