@@ -365,14 +365,105 @@ print("\n✅ Data landing complete!")
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC ## Create Dimension Tables
+# MAGIC 
+# MAGIC Dimension tables provide reference data for factories, models, and devices with proper primary/foreign key relationships.
+
+# COMMAND ----------
+
+# DBTITLE 1,Import Dimension Table Generation Functions
+import sys
+sys.path.append('/Workspace' + spark.conf.get('spark.databricks.notebook.path').rsplit('/', 1)[0])
+from util.data_generator import generate_dimension_tables, generate_device_dimension
+
+print("✓ Dimension table generation functions imported")
+
+# COMMAND ----------
+
+# DBTITLE 1,Create dim_factories Table
+print("Creating dim_factories table with PRIMARY KEY...")
+
+dim_factories, dim_models = generate_dimension_tables(spark)
+
+# Create table with PRIMARY KEY constraint
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {CATALOG}.{SCHEMA}.dim_factories (
+        factory_id STRING NOT NULL,
+        factory_name STRING,
+        region STRING,
+        city STRING,
+        state STRING,
+        CONSTRAINT factories_pk PRIMARY KEY (factory_id) NOT ENFORCED
+    ) USING DELTA
+""")
+
+# Insert data
+dim_factories.write.format('delta').mode('overwrite').option('overwriteSchema', 'true').saveAsTable(f"{CATALOG}.{SCHEMA}.dim_factories")
+factory_count = dim_factories.count()
+print(f"  → {factory_count} factories loaded")
+print(f"✅ Created table: {CATALOG}.{SCHEMA}.dim_factories with PRIMARY KEY (factory_id)\n")
+
+# COMMAND ----------
+
+# DBTITLE 1,Create dim_models Table
+print("Creating dim_models table with PRIMARY KEY...")
+
+# Create table with PRIMARY KEY constraint
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {CATALOG}.{SCHEMA}.dim_models (
+        model_id STRING NOT NULL,
+        model_name STRING,
+        model_family STRING,
+        model_category STRING,
+        release_year INT,
+        CONSTRAINT models_pk PRIMARY KEY (model_id) NOT ENFORCED
+    ) USING DELTA
+""")
+
+# Insert data
+dim_models.write.format('delta').mode('overwrite').option('overwriteSchema', 'true').saveAsTable(f"{CATALOG}.{SCHEMA}.dim_models")
+model_count = dim_models.count()
+print(f"  → {model_count} models loaded")
+print(f"✅ Created table: {CATALOG}.{SCHEMA}.dim_models with PRIMARY KEY (model_id)\n")
+
+# COMMAND ----------
+
+# DBTITLE 1,Create dim_devices Table
+print("Creating dim_devices table with PRIMARY KEY and FOREIGN KEYs...")
+
+dim_devices = generate_device_dimension(spark, NUM_DEVICES)
+
+# Create table with PRIMARY KEY and FOREIGN KEY constraints
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {CATALOG}.{SCHEMA}.dim_devices (
+        device_id INT NOT NULL,
+        factory_id STRING NOT NULL,
+        model_id STRING NOT NULL,
+        installation_date DATE,
+        status STRING,
+        CONSTRAINT devices_pk PRIMARY KEY (device_id) NOT ENFORCED,
+        CONSTRAINT devices_factory_fk FOREIGN KEY (factory_id) REFERENCES {CATALOG}.{SCHEMA}.dim_factories(factory_id) NOT ENFORCED,
+        CONSTRAINT devices_model_fk FOREIGN KEY (model_id) REFERENCES {CATALOG}.{SCHEMA}.dim_models(model_id) NOT ENFORCED
+    ) USING DELTA
+""")
+
+# Insert data
+dim_devices.write.format('delta').mode('overwrite').option('overwriteSchema', 'true').saveAsTable(f"{CATALOG}.{SCHEMA}.dim_devices")
+device_count = dim_devices.count()
+print(f"  → {device_count} devices loaded")
+print(f"✅ Created table: {CATALOG}.{SCHEMA}.dim_devices with PRIMARY KEY and FOREIGN KEYs\n")
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC ## Create Bronze Layer Tables
 # MAGIC 
-# MAGIC Bronze layer loads raw data from volumes with minimal transformations.
+# MAGIC Bronze layer loads raw data from volumes with minimal transformations and foreign key relationships to dimension tables.
 
 # COMMAND ----------
 
 # DBTITLE 1,Create sensor_bronze Table
-print("Creating sensor_bronze table...")
+print("Creating sensor_bronze table with FOREIGN KEYs...")
 
 sensor_bronze_df = (
     spark.read
@@ -401,14 +492,34 @@ total_count = sensor_bronze_df.count()
 print(f"  → {total_count:,} sensor readings loaded")
 print(f"  → {invalid_pressure_count:,} readings with invalid pressure (will be corrected in silver layer)")
 
-# Write bronze table
-sensor_bronze_df.write.format('delta').mode('overwrite').saveAsTable(f"{CATALOG}.{SCHEMA}.sensor_bronze")
-print(f"✅ Created table: {CATALOG}.{SCHEMA}.sensor_bronze\n")
+# Create table with FOREIGN KEY constraints
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {CATALOG}.{SCHEMA}.sensor_bronze (
+        device_id INT NOT NULL,
+        trip_id INT,
+        factory_id STRING NOT NULL,
+        model_id STRING NOT NULL,
+        timestamp TIMESTAMP,
+        airflow_rate DOUBLE,
+        rotation_speed DOUBLE,
+        air_pressure FLOAT,
+        temperature FLOAT,
+        delay FLOAT,
+        density FLOAT,
+        CONSTRAINT sensor_device_fk FOREIGN KEY (device_id) REFERENCES {CATALOG}.{SCHEMA}.dim_devices(device_id) NOT ENFORCED,
+        CONSTRAINT sensor_factory_fk FOREIGN KEY (factory_id) REFERENCES {CATALOG}.{SCHEMA}.dim_factories(factory_id) NOT ENFORCED,
+        CONSTRAINT sensor_model_fk FOREIGN KEY (model_id) REFERENCES {CATALOG}.{SCHEMA}.dim_models(model_id) NOT ENFORCED
+    ) USING DELTA
+""")
+
+# Write data
+sensor_bronze_df.write.format('delta').mode('overwrite').option('overwriteSchema', 'true').saveAsTable(f"{CATALOG}.{SCHEMA}.sensor_bronze")
+print(f"✅ Created table: {CATALOG}.{SCHEMA}.sensor_bronze with FOREIGN KEYs to dimension tables\n")
 
 # COMMAND ----------
 
 # DBTITLE 1,Create inspection_bronze Table
-print("Creating inspection_bronze table...")
+print("Creating inspection_bronze table with FOREIGN KEY...")
 
 inspection_bronze_df = (
     spark.read
@@ -428,9 +539,19 @@ inspection_bronze_df = (
 inspection_count = inspection_bronze_df.count()
 print(f"  → {inspection_count:,} inspection records loaded")
 
-# Write bronze table
-inspection_bronze_df.write.format('delta').mode('overwrite').saveAsTable(f"{CATALOG}.{SCHEMA}.inspection_bronze")
-print(f"✅ Created table: {CATALOG}.{SCHEMA}.inspection_bronze\n")
+# Create table with FOREIGN KEY constraint
+spark.sql(f"""
+    CREATE TABLE IF NOT EXISTS {CATALOG}.{SCHEMA}.inspection_bronze (
+        defect FLOAT,
+        timestamp TIMESTAMP,
+        device_id INT NOT NULL,
+        CONSTRAINT inspection_device_fk FOREIGN KEY (device_id) REFERENCES {CATALOG}.{SCHEMA}.dim_devices(device_id) NOT ENFORCED
+    ) USING DELTA
+""")
+
+# Write data
+inspection_bronze_df.write.format('delta').mode('overwrite').option('overwriteSchema', 'true').saveAsTable(f"{CATALOG}.{SCHEMA}.inspection_bronze")
+print(f"✅ Created table: {CATALOG}.{SCHEMA}.inspection_bronze with FOREIGN KEY to dim_devices\n")
 
 # COMMAND ----------
 
@@ -557,9 +678,32 @@ print(f"✅ Created table: {CATALOG}.{SCHEMA}.inspection_gold\n")
 # MAGIC %md
 # MAGIC ## Setup Complete! 🎉
 # MAGIC 
-# MAGIC All tables have been created successfully. You can now query the data:
+# MAGIC All tables have been created successfully with a proper star schema design including primary/foreign key relationships.
 # MAGIC 
-# MAGIC ### Bronze Tables (Raw Data)
+# MAGIC ### Data Model
+# MAGIC 
+# MAGIC **Dimension Tables (with PRIMARY KEYs):**
+# MAGIC - `dim_factories` - Factory reference data, PK(factory_id)
+# MAGIC - `dim_models` - IoT device model reference data, PK(model_id)
+# MAGIC - `dim_devices` - Device master data, PK(device_id), FK→factories, FK→models
+# MAGIC 
+# MAGIC **Fact Tables (with FOREIGN KEYs):**
+# MAGIC - `sensor_bronze` - IoT sensor readings, FK→devices, FK→factories, FK→models
+# MAGIC - `inspection_bronze` - Device inspection records, FK→devices
+# MAGIC 
+# MAGIC ### Dimension Tables
+# MAGIC ```sql
+# MAGIC -- View factory reference data
+# MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.dim_factories;
+# MAGIC 
+# MAGIC -- View model reference data
+# MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.dim_models ORDER BY model_family, release_year;
+# MAGIC 
+# MAGIC -- View device master data with relationships
+# MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.dim_devices LIMIT 10;
+# MAGIC ```
+# MAGIC 
+# MAGIC ### Bronze Tables (Raw Data with FK Relationships)
 # MAGIC ```sql
 # MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.sensor_bronze LIMIT 10;
 # MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.inspection_bronze LIMIT 10;
@@ -576,26 +720,56 @@ print(f"✅ Created table: {CATALOG}.{SCHEMA}.inspection_gold\n")
 # MAGIC SELECT * FROM {CATALOG}.{SCHEMA}.inspection_gold ORDER BY count DESC LIMIT 10;
 # MAGIC ```
 # MAGIC 
-# MAGIC ### Sample Queries
+# MAGIC ### Sample Queries with Dimensional Joins
 # MAGIC 
-# MAGIC **Defect rate by factory:**
+# MAGIC **Defect rate by factory with factory details:**
 # MAGIC ```sql
 # MAGIC SELECT 
-# MAGIC   factory_id,
-# MAGIC   SUM(CASE WHEN defect = 1 THEN count ELSE 0 END) as defects,
-# MAGIC   SUM(count) as total_inspections,
-# MAGIC   ROUND(100.0 * SUM(CASE WHEN defect = 1 THEN count ELSE 0 END) / SUM(count), 2) as defect_rate_pct
-# MAGIC FROM {CATALOG}.{SCHEMA}.inspection_gold
-# MAGIC GROUP BY factory_id
+# MAGIC   f.factory_name,
+# MAGIC   f.region,
+# MAGIC   f.city,
+# MAGIC   SUM(CASE WHEN ig.defect = 1 THEN ig.count ELSE 0 END) as defects,
+# MAGIC   SUM(ig.count) as total_inspections,
+# MAGIC   ROUND(100.0 * SUM(CASE WHEN ig.defect = 1 THEN ig.count ELSE 0 END) / SUM(ig.count), 2) as defect_rate_pct
+# MAGIC FROM {CATALOG}.{SCHEMA}.inspection_gold ig
+# MAGIC JOIN {CATALOG}.{SCHEMA}.dim_factories f ON ig.factory_id = f.factory_id
+# MAGIC GROUP BY f.factory_name, f.region, f.city
 # MAGIC ORDER BY defect_rate_pct DESC;
 # MAGIC ```
 # MAGIC 
-# MAGIC **Recent anomalies:**
+# MAGIC **Recent anomalies with device and model details:**
 # MAGIC ```sql
-# MAGIC SELECT device_id, factory_id, model_id, timestamp, temperature, rotation_speed, density
-# MAGIC FROM {CATALOG}.{SCHEMA}.anomaly_detected
-# MAGIC ORDER BY timestamp DESC
+# MAGIC SELECT 
+# MAGIC   a.device_id,
+# MAGIC   d.status as device_status,
+# MAGIC   f.factory_name,
+# MAGIC   m.model_name,
+# MAGIC   m.model_category,
+# MAGIC   a.timestamp,
+# MAGIC   a.temperature,
+# MAGIC   a.rotation_speed,
+# MAGIC   a.density
+# MAGIC FROM {CATALOG}.{SCHEMA}.anomaly_detected a
+# MAGIC JOIN {CATALOG}.{SCHEMA}.dim_devices d ON a.device_id = d.device_id
+# MAGIC JOIN {CATALOG}.{SCHEMA}.dim_factories f ON a.factory_id = f.factory_id
+# MAGIC JOIN {CATALOG}.{SCHEMA}.dim_models m ON a.model_id = m.model_id
+# MAGIC ORDER BY a.timestamp DESC
 # MAGIC LIMIT 20;
+# MAGIC ```
+# MAGIC 
+# MAGIC **Sensor performance by model family:**
+# MAGIC ```sql
+# MAGIC SELECT 
+# MAGIC   m.model_family,
+# MAGIC   m.model_category,
+# MAGIC   COUNT(DISTINCT s.device_id) as device_count,
+# MAGIC   AVG(s.temperature) as avg_temperature,
+# MAGIC   AVG(s.rotation_speed) as avg_rotation_speed,
+# MAGIC   MAX(s.temperature) as max_temperature
+# MAGIC FROM {CATALOG}.{SCHEMA}.sensor_bronze s
+# MAGIC JOIN {CATALOG}.{SCHEMA}.dim_models m ON s.model_id = m.model_id
+# MAGIC GROUP BY m.model_family, m.model_category
+# MAGIC ORDER BY avg_temperature DESC;
 # MAGIC ```
 
 # COMMAND ----------
@@ -605,9 +779,13 @@ print("="*80)
 print("SETUP COMPLETE - Summary".center(80))
 print("="*80)
 print(f"\n📊 Tables Created in {CATALOG}.{SCHEMA}:")
-print(f"\n  Bronze Layer:")
-print(f"    • sensor_bronze: {total_count:,} rows")
-print(f"    • inspection_bronze: {inspection_count:,} rows")
+print(f"\n  Dimension Tables (with PRIMARY KEYs):")
+print(f"    • dim_factories: {factory_count} rows - PK(factory_id)")
+print(f"    • dim_models: {model_count} rows - PK(model_id)")
+print(f"    • dim_devices: {device_count} rows - PK(device_id), FK→factories, FK→models")
+print(f"\n  Bronze Layer (with FOREIGN KEYs):")
+print(f"    • sensor_bronze: {total_count:,} rows - FK→devices, FK→factories, FK→models")
+print(f"    • inspection_bronze: {inspection_count:,} rows - FK→devices")
 print(f"\n  Silver Layer:")
 print(f"    • anomaly_detected: {anomaly_count:,} rows")
 print(f"    • inspection_silver: {silver_count:,} rows")
@@ -617,11 +795,16 @@ print(f"\n📁 Data Volumes:")
 print(f"    • {SENSOR_LANDING}")
 print(f"    • {INSPECTION_LANDING}")
 print(f"    • {CHECKPOINT_PATH}")
+print(f"\n🔑 Data Model:")
+print(f"    Star schema with fact tables (sensor_bronze, inspection_bronze)")
+print(f"    referencing dimension tables (dim_devices, dim_factories, dim_models)")
 print("\n" + "="*80)
 print("Next steps: Query the tables or build dashboards on top of this data!".center(80))
 print("="*80)
 
 # COMMAND ----------
+
+
 
 
 

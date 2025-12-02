@@ -203,6 +203,73 @@ def delete_entry(w, entry):
         w.files.delete(entry.path)
 
 
+def generate_dimension_tables(spark):
+    """
+    Generate dimension tables for factories, models, and devices.
+    These match the reference data used in IOT data generation.
+    """
+    # Factory dimension - matches factory_ls from create_initial_df
+    factories_data = [
+        ('A06', 'Factory A06', 'North Region', 'San Francisco', 'CA'),
+        ('D18', 'Factory D18', 'East Region', 'New York', 'NY'),
+        ('J15', 'Factory J15', 'South Region', 'Austin', 'TX'),
+        ('C04', 'Factory C04', 'West Region', 'Seattle', 'WA'),
+        ('T10', 'Factory T10', 'Central Region', 'Chicago', 'IL')
+    ]
+    
+    dim_factories = spark.createDataFrame(
+        factories_data,
+        schema='factory_id string, factory_name string, region string, city string, state string'
+    )
+    
+    # Model dimension - matches model_ls from create_initial_df
+    models_data = [
+        ('SkyJet134', 'SkyJet 134', 'SkyJet', 'Commercial', 2018),
+        ('SkyJet234', 'SkyJet 234', 'SkyJet', 'Commercial', 2019),
+        ('SkyJet334', 'SkyJet 334', 'SkyJet', 'Commercial', 2020),
+        ('EcoJet1000', 'EcoJet 1000', 'EcoJet', 'Eco-Friendly', 2019),
+        ('JetLift7000', 'JetLift 7000', 'JetLift', 'Heavy-Duty', 2017),
+        ('EcoJet2000', 'EcoJet 2000', 'EcoJet', 'Eco-Friendly', 2020),
+        ('FlyForceX550', 'FlyForce X550', 'FlyForce', 'High-Performance', 2021),
+        ('TurboFan3200', 'TurboFan 3200', 'TurboFan', 'Industrial', 2018),
+        ('SkyBolt1', 'SkyBolt 1', 'SkyBolt', 'Compact', 2019),
+        ('SkyBolt2', 'SkyBolt 2', 'SkyBolt', 'Compact', 2020),
+        ('MightyWing1100', 'MightyWing 1100', 'MightyWing', 'Heavy-Duty', 2017),
+        ('EcoJet3000', 'EcoJet 3000', 'EcoJet', 'Eco-Friendly', 2021),
+        ('AeroGlider4150', 'AeroGlider 4150', 'AeroGlider', 'High-Efficiency', 2020),
+        ('SkyBolt250', 'SkyBolt 250', 'SkyBolt', 'Compact', 2021)
+    ]
+    
+    dim_models = spark.createDataFrame(
+        models_data,
+        schema='model_id string, model_name string, model_family string, model_category string, release_year int'
+    )
+    
+    return dim_factories, dim_models
+
+
+def generate_device_dimension(spark, num_devices):
+    """
+    Generate device dimension table with foreign keys to factories and models.
+    Uses same logic as create_initial_df to ensure consistency.
+    """
+    factory_ls = ["'A06'", "'D18'", "'J15'", "'C04'", "'T10'"]
+    model_ls = ["'SkyJet134'", "'SkyJet234'", "'SkyJet334'", "'EcoJet1000'", "'JetLift7000'",
+                "'EcoJet2000'", "'FlyForceX550'", "'TurboFan3200'", "'SkyBolt1'", "'SkyBolt2'",
+                "'MightyWing1100'", "'EcoJet3000'", "'AeroGlider4150'", "'SkyBolt250'"]
+    
+    dim_devices = (
+        spark.range(1, num_devices + 1)
+        .withColumn('device_id', col('id').cast('int'))
+        .withColumn('factory_id', expr(f"element_at(array({','.join(factory_ls)}), abs(hash(device_id)%{len(factory_ls)})+1)"))
+        .withColumn('model_id', expr(f"element_at(array({','.join(model_ls)}), abs(hash(device_id)%{len(model_ls)})+1)"))
+        .withColumn('installation_date', expr("date_add('2022-01-01', cast(rand() * 730 as int))"))  # Random date in 2022-2023
+        .withColumn('status', expr("case when rand() < 0.95 then 'Active' else 'Maintenance' end"))
+        .select('device_id', 'factory_id', 'model_id', 'installation_date', 'status')
+    )
+    
+    return dim_devices
+
 
 def land_more_data(spark, dbutils, config, dgconfig):
     print('Generating data, this may take a minute...')
