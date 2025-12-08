@@ -23,33 +23,33 @@ A hands-on, three-day training program covering the full Databricks Data Intelli
 
 | Time  | Session | Description | Notebook |
 |-------|---------|-------------|----------|
-| 8:30  | **Databricks Introduction** | Platform overview and UI navigation | [01_databricks_introduction.py](Day%201/) |
-| 9:30  | **Lakeflow Designer** | Point-and-click query building with AI | [02_lakeflow_designer.py](Day%201/) |
-| 10:30 | **Dashboards & Genie Overview** | Create dashboards and AI chat interfaces | [03_dashboards_genie_overview.py](Day%201/) |
+| 8:30  | **Databricks Overview** | Platform navigation, data discovery with search | 1 Databricks Overview |
+| 9:30  | **Lakeflow Designer** | Point-and-click query building with AI | 2 Lakeflow Designer |
+| 10:30  | **Dashboards & Genie Overview** | Create dashboards and AI chat interfaces | 3 Dashboards and Genie Overview |
 | 12:00 | *Lunch* | | |
-| 1:00  | **AutoML** | No-code machine learning | [04_automl.py](Day%201/) |
-| 2:00  | **Notebooks & Data Exploration** | Code-based data analysis with AI Assistant | [05_notebooks_data_exploration.py](Day%201/) |
-| 3:00  | **Data Transformation** | Build ETL pipelines | [06_data_transformation.py](Day%201/) |
+| 1:00  | **Notebooks & Data Processing** | Python basics and PySpark data analysis | 4 Notebooks |
+| 2:00  | **Data Transformation** | Build ETL pipelines with medallion architecture | 5 Data Transformation |
+| 3:00  | **Orchestration** | Schedule and automate workflows | 6 Orchestration |
 
-### Day 2: Advanced Analytics & Automation
+### Day 2: Advanced Analytics & Machine Learning
 
 | Time  | Session | Description | Notebook |
 |-------|---------|-------------|----------|
-| 8:30  | **Semantic Modeling** | Create reusable data models | [07_semantic_modeling.py](Day%202/) |
-| 10:00 | **Dashboards Deep Dive** | Advanced dashboard features | [08_dashboards_deep_dive.py](Day%202/) |
-| 11:00 | **Genie Deep Dive** | Engineering AI chat context | [09_genie_deep_dive.py](Day%202/) |
+| 8:30  | **Semantic Modeling** | Create reusable metric definitions | 1 Semantic Modeling |
+| 10:00 | **Dashboards Deep Dive** | Advanced dashboard parameters and filters | 2 Dashboards Deep Dive |
+| 11:00 | **Genie Deep Dive** | Configure AI chat with custom context | 3 Genie Deep Dive |
 | 12:00 | *Lunch* | | |
-| 1:00  | **Agent Bricks** | Build generative AI systems | [10_agent_bricks.py](Day%202/) |
-| 2:00  | **Orchestration** | Schedule and automate workflows | [11_orchestration.py](Day%202/) |
-| 3:00  | **CI/CD and DevOps** | Automated testing and deployment | [12_cicd_devops.py](Day%202/) |
+| 1:00  | **AutoML** | No-code machine learning | 4 AutoML |
+| 2:00  | **MLflow and MLOps** | Model tracking and lifecycle management | 5 MLflow and MLops |
+| 3:00  | **ML and AI Inference** | Batch, streaming, and real-time predictions | 6 ML and AI Inference |
 
 ### Day 3: Production & Operations
 
 | Time  | Session | Description | Notebook |
 |-------|---------|-------------|----------|
-| 8:30  | **MLflow & Production AI/ML** | Model management and deployment | [13_mlflow_production.py](Day%203/) |
-| 10:00 | **Performance Tuning** | Query and pipeline optimization | [14_performance_tuning.py](Day%203/) |
-| 11:00 | **Monitoring, Costs & Governance** | Platform operations and governance | [15_monitoring_governance.py](Day%203/) |
+| 8:30  | **CI/CD and DevOps** | Version control and deployment basics | 1 CI_CD and DevOps |
+| 10:00 | **Performance Tuning** | SQL and table optimization with liquid clustering | 2 Performance Tuning |
+| 11:00 | **Monitor and Govern** | System tables, costs, and governance | 3 Monitor and Govern |
 
 ## Project Structure
 
@@ -65,26 +65,23 @@ iot_time_series_analysis/
 │   └── scripts/
 │       └── test.py                    # Validation scripts
 ├── Day 1/                             # Data Analytics & Exploration
-│   ├── README.md
-│   ├── 01_databricks_introduction.py
-│   ├── 02_lakeflow_designer.py
-│   ├── 03_dashboards_genie_overview.py
-│   ├── 04_automl.py
-│   ├── 05_notebooks_data_exploration.py
-│   └── 06_data_transformation.py
-├── Day 2/                             # Advanced Analytics & Automation
-│   ├── README.md
-│   ├── 07_semantic_modeling.py
-│   ├── 08_dashboards_deep_dive.py
-│   ├── 09_genie_deep_dive.py
-│   ├── 10_agent_bricks.py
-│   ├── 11_orchestration.py
-│   └── 12_cicd_devops.py
+│   ├── 1 Databricks Overview.ipynb
+│   ├── 2 Lakeflow Designer.ipynb
+│   ├── 3 Dashboards and Genie Overview.ipynb
+│   ├── 4 Notebooks.ipynb
+│   ├── 5 Data Transformation.ipynb
+│   └── 6 Orchestration.ipynb
+├── Day 2/                             # Advanced Analytics & Machine Learning
+│   ├── 1 Semantic Modeling.ipynb
+│   ├── 2 Dashboards Deep Dive.ipynb
+│   ├── 3 Genie Deep Dive.ipynb
+│   ├── 4 AutoML.ipynb
+│   ├── 5 MLflow and MLops.ipynb
+│   └── 6 ML and AI Inference.ipynb
 ├── Day 3/                             # Production & Operations
-│   ├── README.md
-│   ├── 13_mlflow_production.py
-│   ├── 14_performance_tuning.py
-│   └── 15_monitoring_governance.py
+│   ├── 1 CI_CD and DevOps.ipynb
+│   ├── 2 Performance Tuning.ipynb
+│   └── 3 Monitor and Govern.ipynb
 ├── DATA_MODEL.md                      # Schema documentation
 └── SCHEMA_CHANGES.md                  # PK/FK relationships
 ```
@@ -144,22 +141,24 @@ The training uses realistic IoT sensor data from manufacturing equipment (jet en
 ### Progressive Skill Building
 
 **Day 1** focuses on core analytics:
-- Start with UI-based tools (Lakeflow, AutoML)
-- Progress to notebooks and code
-- Build dashboards for insights
-- Create ETL pipelines
+- Discover data with search and Catalog Explorer
+- Build queries with UI tools (Lakeflow)
+- Create dashboards and AI chat interfaces
+- Learn Python basics and process data with notebooks
+- Build and orchestrate ETL pipelines
 
-**Day 2** advances to automation:
-- Semantic layers for reusability
-- Advanced dashboard features
-- AI-powered chat interfaces
-- Orchestration and CI/CD
+**Day 2** advances to ML and analytics:
+- Semantic layers for metric reusability
+- Advanced dashboard features with parameters
+- Configure AI-powered chat with custom context
+- Train and deploy machine learning models
+- Full ML lifecycle with MLflow and inference
 
-**Day 3** covers production:
-- ML model lifecycle management
-- Performance optimization
-- Monitoring and governance
-- Platform operations
+**Day 3** covers production operations:
+- Version control and CI/CD basics
+- Performance optimization with liquid clustering
+- System monitoring with system tables
+- Cost analysis and governance policies
 
 ## Prerequisites
 
@@ -220,27 +219,27 @@ ORDER BY defect_rate_pct DESC;
 ## Daily Objectives
 
 ### Day 1 Objectives
-- Navigate Databricks workspace confidently
+- Navigate Databricks workspace and discover data with search
 - Build queries visually with Lakeflow Designer
 - Create dashboards and chat with data using Genie
-- Train ML models with AutoML
-- Write Python/SQL code with AI assistance
+- Learn Python basics and process data with notebooks
 - Build ETL pipelines for data transformation
+- Orchestrate and schedule automated workflows
 
 ### Day 2 Objectives
-- Design semantic models for data reusability
-- Build production-quality dashboards
-- Configure Genie with custom context
-- Create GenAI applications with Agent Bricks
-- Orchestrate workflows with Databricks Jobs
-- Implement CI/CD for automated deployments
+- Design semantic models with metric definitions
+- Build advanced dashboards with parameters and filters
+- Configure Genie with custom context and SQL examples
+- Train ML models with no-code AutoML
+- Track experiments and manage models with MLflow
+- Deploy models for batch, streaming, and real-time inference
 
 ### Day 3 Objectives
-- Manage ML model lifecycle with MLflow
-- Deploy models to production
-- Optimize query and pipeline performance
-- Monitor system health and costs
-- Implement governance policies
+- Implement version control and CI/CD basics
+- Optimize queries with liquid clustering and performance tuning
+- Monitor system health using system tables
+- Analyze and control costs
+- Implement governance policies with Unity Catalog
 - Troubleshoot common issues
 
 ## Support & Resources

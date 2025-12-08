@@ -296,3 +296,143 @@ def land_more_data(spark, dbutils, config, dgconfig):
     sensor_data.write.mode('append').csv(config['sensor_landing'], header='true')
     defect_data.write.mode('append').csv(config['inspection_landing'], header='true')
     dbutils.fs.rm(config['checkpoints']+'/tmp', recurse=True)
+
+
+def generate_synthetic_system_tables(spark, catalog, schema):
+    """
+    Generate synthetic system tables for training purposes.
+    These mimic the structure of Databricks system tables but contain synthetic data.
+    """
+    from datetime import datetime, timedelta
+    import random
+    
+    print("📊 Generating synthetic system tables...")
+    
+    # ========================================
+    # 1. BILLING DATA
+    # ========================================
+    dates = [(datetime.now() - timedelta(days=x)).strftime('%Y-%m-%d') for x in range(30)]
+    workspaces = ['prod-workspace', 'dev-workspace', 'staging-workspace']
+    sku_names = ['JOBS_COMPUTE', 'ALL_PURPOSE_COMPUTE', 'SQL_COMPUTE', 'DELTA_LIVE_TABLES']
+    users = ['user1@company.com', 'user2@company.com', 'user3@company.com', 'system']
+    
+    billing_data = []
+    for date in dates:
+        for _ in range(50):
+            billing_data.append({
+                'usage_date': date,
+                'workspace_id': random.choice(workspaces),
+                'sku_name': random.choice(sku_names),
+                'usage_quantity': round(random.uniform(0.1, 10.0), 2),
+                'usage_unit': 'DBU',
+                'list_price': round(random.uniform(0.1, 2.0), 2),
+                'usage_metadata': {
+                    'job_id': f'job_{random.randint(1, 100)}',
+                    'cluster_id': f'cluster_{random.randint(1, 50)}'
+                }
+            })
+    
+    billing_df = spark.createDataFrame(billing_data)
+    billing_df.write.mode('overwrite').saveAsTable(f'{catalog}.{schema}.system_billing')
+    print(f'✅ Created {catalog}.{schema}.system_billing')
+    
+    # ========================================
+    # 2. QUERY HISTORY DATA
+    # ========================================
+    query_texts = [
+        'SELECT * FROM sensor_bronze WHERE factory_id = "A06"',
+        'SELECT device_id, AVG(temperature) FROM sensor_bronze GROUP BY device_id',
+        'SELECT * FROM inspection_bronze ORDER BY timestamp DESC',
+        'SELECT COUNT(*) FROM sensor_bronze',
+        'INSERT INTO sensor_bronze SELECT * FROM sensor_landing',
+        'OPTIMIZE sensor_bronze',
+        'SELECT f.factory_name, COUNT(*) FROM sensor_bronze s JOIN dim_factories f',
+        'CREATE TABLE sensor_aggregates AS SELECT device_id, AVG(temperature)',
+        'SELECT * FROM dim_devices WHERE status = "Active"',
+        'UPDATE dim_devices SET status = "Maintenance" WHERE device_id = 123',
+    ]
+    
+    warehouses = ['iot-analytics-warehouse', 'prod-sql-warehouse', 'dev-warehouse']
+    query_types = ['SELECT', 'INSERT', 'UPDATE', 'CREATE', 'OPTIMIZE']
+    
+    query_history_data = []
+    for i in range(500):
+        query_start_time = datetime.now() - timedelta(
+            days=random.randint(0, 7),
+            hours=random.randint(0, 23),
+            minutes=random.randint(0, 59)
+        )
+        execution_time_ms = random.randint(100, 30000)
+        
+        query_history_data.append({
+            'query_id': f'query_{i}',
+            'query_text': random.choice(query_texts),
+            'query_start_time': query_start_time,
+            'execution_time_ms': execution_time_ms,
+            'rows_produced': random.randint(0, 100000),
+            'bytes_scanned': random.randint(1000, 10000000),
+            'compute_cost': round(random.uniform(0.01, 5.0), 3),
+            'warehouse_id': random.choice(warehouses),
+            'user_email': random.choice(users),
+            'query_type': random.choice(query_types),
+            'status': random.choice(['FINISHED', 'FINISHED', 'FINISHED', 'FAILED'])
+        })
+    
+    query_history_df = spark.createDataFrame(query_history_data)
+    query_history_df.write.mode('overwrite').saveAsTable(f'{catalog}.{schema}.query_history')
+    print(f'✅ Created {catalog}.{schema}.query_history')
+    
+    # ========================================
+    # 3. USER PERMISSIONS DATA
+    # ========================================
+    user_permissions_data = [
+        {'user_email': 'user1@company.com', 'region': 'North Region', 'role': 'analyst'},
+        {'user_email': 'user2@company.com', 'region': 'East Region', 'role': 'analyst'},
+        {'user_email': 'user3@company.com', 'region': 'South Region', 'role': 'analyst'},
+        {'user_email': 'admin@company.com', 'region': 'All', 'role': 'admin'},
+        {'user_email': 'system', 'region': 'All', 'role': 'system'},
+    ]
+    
+    user_permissions_df = spark.createDataFrame(user_permissions_data)
+    user_permissions_df.write.mode('overwrite').saveAsTable(f'{catalog}.{schema}.user_permissions')
+    print(f'✅ Created {catalog}.{schema}.user_permissions')
+    
+    # ========================================
+    # 4. AUDIT LOG DATA
+    # ========================================
+    table_names = ['sensor_bronze', 'inspection_bronze', 'anomaly_detected',
+                   'inspection_gold', 'dim_devices', 'dim_factories']
+    action_names = ['SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE_TABLE', 'DROP_TABLE']
+    
+    audit_data = []
+    for i in range(300):
+        event_time = datetime.now() - timedelta(
+            days=random.randint(0, 7),
+            hours=random.randint(0, 23),
+            minutes=random.randint(0, 59)
+        )
+        
+        audit_data.append({
+            'event_id': f'event_{i}',
+            'event_time': event_time,
+            'event_date': event_time.date(),
+            'user_email': random.choice(users),
+            'action_name': random.choice(action_names),
+            'table_full_name': f'{catalog}.{schema}.{random.choice(table_names)}',
+            'workspace_id': random.choice(workspaces),
+            'request_id': f'req_{i}',
+            'source_ip': f'10.0.{random.randint(1, 255)}.{random.randint(1, 255)}',
+        })
+    
+    audit_df = spark.createDataFrame(audit_data)
+    audit_df.write.mode('overwrite').saveAsTable(f'{catalog}.{schema}.audit_logs')
+    print(f'✅ Created {catalog}.{schema}.audit_logs')
+    
+    print('\n' + '='*60)
+    print('📊 SYNTHETIC SYSTEM TABLES CREATED')
+    print('='*60)
+    print(f'✅ {catalog}.{schema}.system_billing     - {billing_df.count()} records')
+    print(f'✅ {catalog}.{schema}.query_history      - {query_history_df.count()} records')
+    print(f'✅ {catalog}.{schema}.user_permissions   - {user_permissions_df.count()} records')
+    print(f'✅ {catalog}.{schema}.audit_logs         - {audit_df.count()} records')
+    print('='*60)

@@ -371,12 +371,12 @@ print("\n✅ Data landing complete!")
 
 # COMMAND ----------
 
-# DBTITLE 1,Import Dimension Table Generation Functions
+# DBTITLE 1,Import Dimension Table and System Table Generation Functions
 import sys
 sys.path.append('/Workspace' + spark.conf.get('spark.databricks.notebook.path').rsplit('/', 1)[0])
-from util.data_generator import generate_dimension_tables, generate_device_dimension
+from util.data_generator import generate_dimension_tables, generate_device_dimension, generate_synthetic_system_tables
 
-print("✓ Dimension table generation functions imported")
+print("✓ Dimension table and system table generation functions imported")
 
 # COMMAND ----------
 
@@ -774,6 +774,15 @@ print(f"✅ Created table: {CATALOG}.{SCHEMA}.inspection_gold\n")
 
 # COMMAND ----------
 
+# COMMAND ----------
+
+# DBTITLE 1,Generate Synthetic System Tables
+print("\nGenerating synthetic system tables for training...")
+generate_synthetic_system_tables(spark, CATALOG, SCHEMA)
+print("✅ Synthetic system tables created!\n")
+
+# COMMAND ----------
+
 # DBTITLE 1,Summary Statistics
 print("="*80)
 print("SETUP COMPLETE - Summary".center(80))
@@ -791,6 +800,11 @@ print(f"    • anomaly_detected: {anomaly_count:,} rows")
 print(f"    • inspection_silver: {silver_count:,} rows")
 print(f"\n  Gold Layer:")
 print(f"    • inspection_gold: {gold_count:,} rows")
+print(f"\n  System Tables (Synthetic for Training):")
+print(f"    • system_billing - 30 days of billing data")
+print(f"    • query_history - 500 query executions")
+print(f"    • user_permissions - User access control")
+print(f"    • audit_logs - 300 audit events")
 print(f"\n📁 Data Volumes:")
 print(f"    • {SENSOR_LANDING}")
 print(f"    • {INSPECTION_LANDING}")
