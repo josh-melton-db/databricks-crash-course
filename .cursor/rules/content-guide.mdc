@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+In general, tighten up the examples to be doable in 30 minutes. Quick, bare minimum to get familiar with the subject. Further content can be in a “try this out” section at the end
+Create a situation that the students will follow: they have IOT data coming in from planes, and they have an order from leadership to build dashboards, interactive “talk to my data”, predictive models, and of course LLM / agent systems before the end of the week. Then make each notebook’s example(s) tie into that overarching goal. The bare minimum examples should be all they need to do to set themselves up for the next thing, and the “try this out” section can hold any extra content
+Make each step tie together with previous steps where possible. For example, the introduction to genie can be the starting point for advanced genie, or the semantic modeling step can be the foundation for the dashboard and genie deep dives

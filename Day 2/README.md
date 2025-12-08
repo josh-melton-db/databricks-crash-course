@@ -23,37 +23,40 @@ Build on Day 1 foundations with semantic modeling, advanced dashboards, GenAI ap
 
 ## Session Details
 
-### 7. Semantic Modeling (8:30-10:00)
+### 7. Semantic Modeling with Unity Catalog Metric Views (8:30-10:00)
 
 **Learning Objectives:**
-- Create semantic models for data reusability
-- Define metrics and calculations centrally
-- Build dimensional models
-- Share models across dashboards
+- Understand semantic layer concepts and benefits
+- Create Unity Catalog Metric Views with YAML
+- Define metrics, measures, and dimensions
+- Query semantic models with SQL and natural language
+- Build foundation for dashboards and Genie
 
-**Notebook:** `07_semantic_modeling.py`
+**Notebook:** `1 Semantic Modeling with Metric Views.ipynb`
+
+**Approach:**
+This session uses a **"follow along"** approach with the [Databricks Metric Views Demo](https://www.databricks.com/resources/demos/tours/governance/metric-views-with-uc?itm_data=demo_center), adapted to your IOT aircraft data.
 
 **Topics Covered:**
-- What are semantic models?
-- Creating a model from Unity Catalog tables
-- Defining measures and dimensions
-- Calculated fields and aggregations
-- Row-level security
-- Model sharing and permissions
+- Unity Catalog Metric Views overview
+- YAML structure: metrics, dimensions, relationships
+- Following the interactive demo with your tables
+- Complete example YAML for IOT sensor data
+- Querying metric views in SQL and Genie
 
 **Hands-On:**
-- Create "Manufacturing Performance" semantic model
-- Define dimensions: factory, model, device, time
-- Define measures: defect_rate, avg_temperature, device_count
-- Add calculated field: efficiency_score
-- Configure row-level security by region
-- Share model with team
+- Follow the Databricks demo with these tables:
+  - `sensor_bronze`, `dim_factories`, `dim_models`, `dim_devices`
+- Create metrics: `avg_temperature`, `defect_rate`, `anomaly_rate`
+- Define dimensions: factory, model, time hierarchies
+- Test queries in SQL and natural language
 
 **Key Concepts:**
-- **Dimensions**: Descriptive attributes (factory_name, model_family)
-- **Measures**: Numeric metrics (defect_rate, avg_temp)
-- **Relationships**: How tables connect (FK relationships)
-- **Aggregations**: Default rollup behavior (SUM, AVG, COUNT)
+- **Semantic Layer**: Single source of truth for metrics
+- **Metric Views**: YAML-defined business metrics
+- **Composability**: Build complex metrics from simple ones
+- **Reusability**: Power dashboards, Genie, and AI agents
+- **Consistency**: Everyone uses the same metric definitions
 
 ---
 
