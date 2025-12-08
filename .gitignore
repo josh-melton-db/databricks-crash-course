@@ -143,3 +143,4 @@ setup/util/configuration.py
 # Local test data and checkpoints
 *.checkpoint/
 checkpoints/
+.cursor
