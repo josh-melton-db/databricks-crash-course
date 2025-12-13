@@ -23,7 +23,7 @@
 
 # DBTITLE 1,Configuration
 # Configure your catalog and schema here
-CATALOG = 'josh_melton'  # Change to your catalog name
+CATALOG = 'dwx_airops_insights_platform_dev_workspace'  # Change to your catalog name
 SCHEMA = 'db_crash_course'  # Leave as None to auto-generate, or set to your schema name
 
 # Data generation parameters
@@ -249,7 +249,7 @@ print("✓ Data generation functions loaded")
 
 # DBTITLE 1,Generate IoT Sensor Data
 print(f"Generating {NUM_ROWS:,} rows of IoT sensor data for {NUM_DEVICES} devices...")
-print("This may take 2-3 minutes...\n")
+print("This may take a few minutes...\n")
 
 # Create initial device dataframe
 factory_ls = ["'A06'", "'D18'", "'J15'", "'C04'", "'T10'"]
