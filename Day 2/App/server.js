@@ -12,14 +12,14 @@ app.use(cors());
 app.use(express.json());
 app.use('/static', express.static(path.join(__dirname, 'static')));
 
-// Mock aircraft fleet data
+// Mock Christmas sleigh fleet data
 const aircraftFleet = [
-  { id: 'FDX001', model: 'Boeing 777F', origin: 'Memphis', destination: 'Paris', cargo: 'Priority' },
-  { id: 'FDX002', model: 'Boeing 767F', origin: 'Indianapolis', destination: 'Tokyo', cargo: 'Standard' },
-  { id: 'FDX003', model: 'Airbus A300', origin: 'Oakland', destination: 'Anchorage', cargo: 'Express' },
-  { id: 'FDX004', model: 'Boeing 757F', origin: 'Newark', destination: 'London', cargo: 'Priority' },
-  { id: 'FDX005', model: 'Boeing 777F', origin: 'Miami', destination: 'São Paulo', cargo: 'Express' },
-  { id: 'FDX006', model: 'MD-11F', origin: 'Los Angeles', destination: 'Shanghai', cargo: 'Standard' }
+  { id: 'SLEIGH-1', model: 'Dasher Team', origin: 'North Pole', destination: 'Paris', cargo: '🎁 Toys' },
+  { id: 'SLEIGH-2', model: 'Dancer Team', origin: 'North Pole', destination: 'Tokyo', cargo: '🎁 Toys' },
+  { id: 'SLEIGH-3', model: 'Prancer Team', origin: 'North Pole', destination: 'Anchorage', cargo: '🎁 Toys' },
+  { id: 'SLEIGH-4', model: 'Vixen Team', origin: 'North Pole', destination: 'London', cargo: '🎁 Toys' },
+  { id: 'SLEIGH-5', model: 'Comet Team', origin: 'North Pole', destination: 'São Paulo', cargo: '🎁 Toys' },
+  { id: 'SLEIGH-6', model: 'Rudolph Team', origin: 'North Pole', destination: 'Shanghai', cargo: '🎁 Toys' }
 ];
 
 // Generate realistic flight paths
@@ -37,19 +37,14 @@ function generateFlightPath(start, end, progress) {
   return path;
 }
 
-// Airport coordinates
+// Destination coordinates (North Pole + destinations)
 const airports = {
-  'Memphis': { lat: 35.0424, lng: -89.9767 },
+  'North Pole': { lat: 90, lng: 0 },
   'Paris': { lat: 49.0097, lng: 2.5479 },
-  'Indianapolis': { lat: 39.7173, lng: -86.2944 },
   'Tokyo': { lat: 35.5494, lng: 139.7798 },
-  'Oakland': { lat: 37.7213, lng: -122.2208 },
   'Anchorage': { lat: 61.1744, lng: -149.9961 },
-  'Newark': { lat: 40.6895, lng: -74.1745 },
   'London': { lat: 51.4700, lng: -0.4543 },
-  'Miami': { lat: 25.7959, lng: -80.2870 },
   'São Paulo': { lat: -23.4356, lng: -46.4731 },
-  'Los Angeles': { lat: 33.9416, lng: -118.4085 },
   'Shanghai': { lat: 31.1434, lng: 121.8052 }
 };
 
@@ -71,11 +66,11 @@ app.get('/api/aircraft', (req, res) => {
     const lat = origin.lat + (dest.lat - origin.lat) * progress;
     const lng = origin.lng + (dest.lng - origin.lng) * progress;
     
-    // Generate realistic IoT sensor data
+    // Generate realistic sleigh sensor data
     const altitude = 35000 + Math.sin(progress * Math.PI) * 3000;
-    const speed = 450 + Math.random() * 50;
-    const fuel = 85 - (progress * 70);
-    const engineTemp = 600 + Math.random() * 50;
+    const speed = 450 + Math.random() * 50; // Magic speed!
+    const fuel = 85 - (progress * 70); // Christmas magic fuel
+    const engineTemp = 600 + Math.random() * 50; // Reindeer body temp
     const cabinTemp = 21 + Math.random() * 3;
     
     return {
@@ -130,19 +125,21 @@ app.get('/api/fleet/stats', (req, res) => {
   const stats = {
     totalAircraft: aircraftFleet.length,
     inFlight: aircraftFleet.length,
-    totalCargo: '847 tons',
+    totalCargo: '🎁 2.5M Gifts',
     avgAltitude: '35,400 ft',
     avgSpeed: '475 mph',
     alerts: 1,
-    onTimePerformance: '98.2%'
+    onTimePerformance: '99.9% ⭐'
   };
   
   res.json(stats);
 });
 
 app.listen(port, () => {
-  console.log(`🚀 FedEx Air Operations Dashboard running at http://localhost:${port}`);
-  console.log(`📊 API endpoints available at /api/*`);
+  console.log(`🎅 Santa's Flight Command Center running at http://localhost:${port}`);
+  console.log(`🎄 Tracking sleighs across the globe!`);
+  console.log(`⭐ API endpoints available at /api/*`);
 });
+
 
 

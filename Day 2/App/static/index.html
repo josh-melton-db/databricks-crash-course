@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FedEx Air Operations | IoT Dashboard</title>
+  <title>Santa's Flight Command | North Pole Operations</title>
   
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎅</text></svg>">
   
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -26,9 +26,29 @@
     
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, #c41e3a 0%, #165b33 100%);
       color: #333;
       overflow-x: hidden;
+      position: relative;
+    }
+    
+    /* Snowfall animation */
+    @keyframes snowfall {
+      0% { transform: translateY(-10vh) translateX(0); opacity: 1; }
+      100% { transform: translateY(100vh) translateX(100px); opacity: 0.3; }
+    }
+    
+    body::before {
+      content: '❄️ ❅ ❆ ❄️ ❅ ❆ ❄️ ❅ ❆ ❄️ ❅ ❆ ❄️ ❅ ❆';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      font-size: 20px;
+      opacity: 0.6;
+      animation: snowfall 10s linear infinite;
+      pointer-events: none;
+      z-index: 1000;
     }
     
     .app-container {
@@ -38,16 +58,17 @@
     }
     
     .header {
-      background: linear-gradient(135deg, #4c00b0 0%, #7700ff 100%);
+      background: linear-gradient(135deg, #c41e3a 0%, #165b33 100%);
       color: white;
       padding: 25px 30px;
       border-radius: 15px;
       margin-bottom: 25px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(255, 215, 0, 0.3);
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
+      border: 2px solid gold;
     }
     
     .header-left {
@@ -60,10 +81,17 @@
       font-size: 32px;
       font-weight: bold;
       letter-spacing: -1px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
     }
     
     .logo-accent {
-      color: #ff6b00;
+      color: gold;
+      animation: sparkle 2s ease-in-out infinite;
+    }
+    
+    @keyframes sparkle {
+      0%, 100% { opacity: 1; text-shadow: 0 0 10px gold; }
+      50% { opacity: 0.7; text-shadow: 0 0 20px gold; }
     }
     
     .header-title {
@@ -102,7 +130,7 @@
     .stat-value {
       font-size: 28px;
       font-weight: bold;
-      color: #4c00b0;
+      color: #c41e3a;
     }
     
     .main-grid {
@@ -166,13 +194,14 @@
     }
     
     .aircraft-card {
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      background: linear-gradient(135deg, #fff5f5 0%, #ffe5e5 100%);
       padding: 15px;
       border-radius: 10px;
       margin-bottom: 15px;
       cursor: pointer;
       transition: all 0.2s;
-      border-left: 4px solid #4c00b0;
+      border-left: 4px solid #c41e3a;
+      box-shadow: 0 2px 8px rgba(196, 30, 58, 0.1);
     }
     
     .aircraft-card:hover {
@@ -181,14 +210,15 @@
     }
     
     .aircraft-card.selected {
-      border-left-color: #ff6b00;
-      background: linear-gradient(135deg, #fff5f0 0%, #ffe5d9 100%);
+      border-left-color: gold;
+      background: linear-gradient(135deg, #fffdf0 0%, #fff4d9 100%);
+      box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
     }
     
     .aircraft-id {
       font-size: 18px;
       font-weight: bold;
-      color: #4c00b0;
+      color: #c41e3a;
       margin-bottom: 5px;
     }
     
@@ -229,17 +259,17 @@
     }
     
     .status-inflight {
-      background: #4ade80;
+      background: #165b33;
       color: white;
     }
     
     .status-warning {
-      background: #fbbf24;
+      background: gold;
       color: #333;
     }
     
     .status-landing {
-      background: #60a5fa;
+      background: #c41e3a;
       color: white;
     }
     
@@ -271,10 +301,11 @@
       display: inline-block;
       width: 10px;
       height: 10px;
-      background: #4ade80;
+      background: gold;
       border-radius: 50%;
       margin-left: 10px;
       animation: pulse 2s infinite;
+      box-shadow: 0 0 10px gold;
     }
     
     @keyframes pulse {
@@ -293,7 +324,7 @@
     
     .progress-fill {
       height: 100%;
-      background: linear-gradient(90deg, #4c00b0 0%, #7700ff 100%);
+      background: linear-gradient(90deg, #c41e3a 0%, #165b33 100%);
       transition: width 0.3s ease;
     }
   </style>
@@ -303,15 +334,15 @@
     <div class="header">
       <div class="header-left">
         <div class="logo">
-          Fed<span class="logo-accent">Ex</span>
+          🎅 Santa's <span class="logo-accent">Flight Command</span> 🎄
         </div>
         <div class="header-title">
-          Air Operations | IoT Dashboard
+          North Pole Operations | Live Sleigh Tracking
           <span class="refresh-indicator"></span>
         </div>
       </div>
-      <div style="color: #fff; font-size: 14px; opacity: 0.8;">
-        Powered by Databricks
+      <div style="color: gold; font-size: 14px; opacity: 0.9; font-weight: bold;">
+        ⭐ Powered by Databricks Magic ⭐
       </div>
     </div>
 
@@ -321,14 +352,14 @@
 
     <div class="main-grid">
       <div class="map-container">
-        <div class="map-title">🌍 Live Flight Tracking</div>
+        <div class="map-title">🌍 Live Sleigh Tracking - Christmas Eve Route</div>
         <div id="map">
           <div id="map-loading">Loading map tiles...</div>
         </div>
       </div>
 
       <div class="aircraft-list-container">
-        <div class="map-title">✈️ Active Aircraft</div>
+        <div class="map-title">🦌 Active Reindeer Teams</div>
         <div id="aircraft-list">
           <!-- Aircraft cards will be populated by JavaScript -->
         </div>
@@ -337,11 +368,11 @@
 
     <div id="charts-container" class="charts-container">
       <div class="chart-card">
-        <div class="chart-title">📈 Altitude History</div>
+        <div class="chart-title">📈 Flight Altitude History</div>
         <canvas id="altitudeChart"></canvas>
       </div>
       <div class="chart-card">
-        <div class="chart-title">⛽ Fuel Consumption</div>
+        <div class="chart-title">✨ Christmas Magic Level</div>
         <canvas id="fuelChart"></canvas>
       </div>
     </div>

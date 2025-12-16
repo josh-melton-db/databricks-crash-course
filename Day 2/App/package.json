@@ -1,8 +1,8 @@
 {
-  "name": "fedex-air-ops-dashboard",
+  "name": "santas-flight-command",
   "version": "1.0.0",
   "type": "module",
-  "description": "FedEx Air Operations IoT Monitoring Dashboard",
+  "description": "Santa's Flight Command Center - North Pole Operations Dashboard",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -13,5 +13,6 @@
     "cors": "^2.8.5"
   }
 }
+
 
 

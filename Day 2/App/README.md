@@ -1,24 +1,24 @@
-# FedEx Air Operations IoT Dashboard 🚀
+# Santa's Flight Command Center 🎅🎄
 
-A real-time IoT monitoring dashboard for FedEx Air Operations, showcasing aircraft tracking, sensor data visualization, and time-series analysis. Built for Databricks Apps.
+A magical real-time tracking dashboard for Santa's Christmas Eve operations, showcasing sleigh tracking, reindeer sensor data, and Christmas magic analytics. Built for Databricks Apps.
 
 ## Features ✨
 
-- **Interactive Flight Map**: Real-time aircraft tracking with flight paths on OpenStreetMap (using Leaflet)
-- **Live IoT Sensor Data**: Monitor altitude, speed, fuel, engine temperature, and cabin temperature
+- **Interactive Sleigh Map**: Real-time sleigh tracking with magical flight paths on OpenStreetMap (using Leaflet)
+- **Live Reindeer Sensors**: Monitor altitude, speed, Christmas magic levels, reindeer vitals, and cabin temperature
 - **Time-Series Analytics**: Historical sensor data visualization with Chart.js
-- **Fleet Statistics**: At-a-glance metrics for the entire air fleet
-- **Responsive Design**: Beautiful, modern UI with FedEx branding
-- **Auto-Refresh**: Data updates every 5 seconds
+- **Fleet Statistics**: At-a-glance metrics for all active sleigh teams
+- **Festive Design**: Beautiful Christmas-themed UI with red, green, and gold colors plus snowfall animation
+- **Auto-Refresh**: Data updates every 5 seconds to track Santa's progress
 
-## Demo Highlights for FedEx Users 🎯
+## Demo Highlights 🎯
 
-This app demonstrates how Databricks can:
-- Handle real-time IoT data streams from aircraft sensors
-- Visualize time-series data for operational insights
-- Track fleet operations across global routes
-- Monitor critical alerts and performance metrics
-- Provide actionable dashboards for air operations teams
+This festive demo shows how Databricks can:
+- Handle real-time IoT data streams from Santa's sleigh sensors
+- Visualize time-series data for Christmas Eve operations
+- Track global delivery routes in real-time
+- Monitor Christmas magic levels and reindeer vitals
+- Provide magical dashboards for North Pole operations teams
 
 ## Quick Start (Local Development)
 
@@ -125,6 +125,7 @@ Want to make this even better? Try:
 
 ---
 
-**Built with ❤️ for FedEx Air Operations | Powered by Databricks**
+**Built with 🎄 Christmas Spirit and ❤️ | Powered by Databricks Magic ⭐**
+
 
 

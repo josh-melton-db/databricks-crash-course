@@ -207,18 +207,18 @@ class AirOpsApp {
       
       // Add aircraft markers and flight paths
       aircraft.forEach(plane => {
-        // Draw flight path
+        // Draw flight path (sparkly Christmas trail!)
         L.polyline(plane.flightPath, {
-          color: '#4c00b0',
-          weight: 2,
-          opacity: 0.4,
-          dashArray: '5, 10'
+          color: '#c41e3a',
+          weight: 3,
+          opacity: 0.6,
+          dashArray: '10, 5'
         }).addTo(this.leafletMap);
         
-        // Custom airplane icon
+        // Custom sleigh icon
         const planeIcon = L.divIcon({
           className: 'custom-plane-icon',
-          html: `<div style="font-size: 24px;">✈️</div>`,
+          html: `<div style="font-size: 28px; text-shadow: 0 0 10px gold;">🛷</div>`,
           iconSize: [30, 30],
           iconAnchor: [15, 15]
         });
@@ -267,8 +267,8 @@ class AirOpsApp {
           datasets: [{
             label: 'Altitude (ft)',
             data: data.map(d => d.altitude),
-            borderColor: '#4c00b0',
-            backgroundColor: 'rgba(76, 0, 176, 0.1)',
+            borderColor: '#c41e3a',
+            backgroundColor: 'rgba(196, 30, 58, 0.1)',
             fill: true,
             tension: 0.4
           }]
@@ -291,10 +291,10 @@ class AirOpsApp {
         data: {
           labels: data.map(d => new Date(d.timestamp).toLocaleTimeString()),
           datasets: [{
-            label: 'Fuel (%)',
+            label: 'Christmas Magic (%)',
             data: data.map(d => d.fuel),
-            borderColor: '#ff6b00',
-            backgroundColor: 'rgba(255, 107, 0, 0.1)',
+            borderColor: '#165b33',
+            backgroundColor: 'rgba(22, 91, 51, 0.1)',
             fill: true,
             tension: 0.4
           }]
@@ -320,4 +320,5 @@ if (document.readyState === 'loading') {
 } else {
   app = new AirOpsApp();
 }
+
 
