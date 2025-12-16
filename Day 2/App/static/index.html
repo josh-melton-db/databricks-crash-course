@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FedEx Air Operations | IoT Dashboard</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  
+  <!-- React and Babel -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      overflow-x: hidden;
+    }
+    
+    .app-container {
+      max-width: 1920px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #4c00b0 0%, #7700ff 100%);
+      color: white;
+      padding: 25px 30px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    
+    .logo {
+      font-size: 32px;
+      font-weight: bold;
+      letter-spacing: -1px;
+    }
+    
+    .logo-accent {
+      color: #ff6b00;
+    }
+    
+    .header-title {
+      font-size: 24px;
+      font-weight: 300;
+    }
+    
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    
+    .stat-card {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      transition: transform 0.2s;
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+    
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #4c00b0;
+    }
+    
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 25px;
+      margin-bottom: 25px;
+    }
+    
+    @media (max-width: 1200px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    .map-container {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      height: 600px;
+    }
+    
+    .map-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    #map {
+      height: calc(100% - 40px);
+      min-height: 500px;
+      border-radius: 10px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+      background: #f0f0f0;
+      position: relative;
+    }
+    
+    .custom-plane-icon {
+      background: transparent;
+      border: none;
+    }
+    
+    .aircraft-list {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      height: 600px;
+      overflow-y: auto;
+    }
+    
+    .aircraft-card {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border-left: 4px solid #4c00b0;
+    }
+    
+    .aircraft-card:hover {
+      transform: translateX(5px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .aircraft-card.selected {
+      border-left-color: #ff6b00;
+      background: linear-gradient(135deg, #fff5f0 0%, #ffe5d9 100%);
+    }
+    
+    .aircraft-id {
+      font-size: 18px;
+      font-weight: bold;
+      color: #4c00b0;
+      margin-bottom: 5px;
+    }
+    
+    .aircraft-route {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    
+    .sensor-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .sensor-item {
+      font-size: 12px;
+    }
+    
+    .sensor-label {
+      color: #888;
+    }
+    
+    .sensor-value {
+      font-weight: 600;
+      color: #333;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-top: 8px;
+    }
+    
+    .status-inflight {
+      background: #4ade80;
+      color: white;
+    }
+    
+    .status-warning {
+      background: #fbbf24;
+      color: #333;
+    }
+    
+    .status-landing {
+      background: #60a5fa;
+      color: white;
+    }
+    
+    .charts-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+      gap: 25px;
+    }
+    
+    .chart-card {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+    
+    .chart-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #333;
+    }
+    
+    canvas {
+      max-height: 300px;
+    }
+    
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 400px;
+      font-size: 20px;
+      color: white;
+    }
+    
+    .refresh-indicator {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      background: #4ade80;
+      border-radius: 50%;
+      margin-left: 10px;
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: #e5e7eb;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 8px;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #4c00b0 0%, #7700ff 100%);
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    function App() {
+      const [aircraftData, setAircraftData] = useState([]);
+      const [fleetStats, setFleetStats] = useState(null);
+      const [selectedAircraft, setSelectedAircraft] = useState(null);
+      const [chartData, setChartData] = useState(null);
+      const [loading, setLoading] = useState(true);
+      const [mapReady, setMapReady] = useState(false);
+      const mapRef = useRef(null);
+      const leafletMapRef = useRef(null);
+      const markersRef = useRef({});
+      const chartsRef = useRef({});
+
+      // Initialize map
+      useEffect(() => {
+        // Wait for Leaflet to be fully loaded
+        const initMap = () => {
+          if (typeof L === 'undefined') {
+            setTimeout(initMap, 100);
+            return;
+          }
+          
+          if (!leafletMapRef.current && mapRef.current) {
+            try {
+              leafletMapRef.current = L.map(mapRef.current).setView([30, 0], 2);
+              
+              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 19
+              }).addTo(leafletMapRef.current);
+              
+              setMapReady(true);
+              console.log('Map initialized successfully');
+            } catch (error) {
+              console.error('Error initializing map:', error);
+            }
+          }
+        };
+        
+        setTimeout(initMap, 100);
+      }, []);
+
+      // Fetch data
+      useEffect(() => {
+        const fetchData = async () => {
+          try {
+            const [aircraftRes, statsRes] = await Promise.all([
+              fetch('/api/aircraft'),
+              fetch('/api/fleet/stats')
+            ]);
+            
+            const aircraft = await aircraftRes.json();
+            const stats = await statsRes.json();
+            
+            setAircraftData(aircraft);
+            setFleetStats(stats);
+            setLoading(false);
+          } catch (error) {
+            console.error('Error fetching data:', error);
+          }
+        };
+
+        fetchData();
+        const interval = setInterval(fetchData, 5000); // Update every 5 seconds
+        
+        return () => clearInterval(interval);
+      }, []);
+      
+      // Update map when aircraft data changes AND map is ready
+      useEffect(() => {
+        if (aircraftData.length > 0 && leafletMapRef.current) {
+          updateMap(aircraftData);
+        }
+      }, [aircraftData, mapReady]);
+
+      // Fetch history for selected aircraft
+      useEffect(() => {
+        if (selectedAircraft) {
+          fetch(`/api/aircraft/${selectedAircraft.id}/history`)
+            .then(res => res.json())
+            .then(data => {
+              setChartData(data);
+              updateCharts(data);
+            });
+        }
+      }, [selectedAircraft]);
+
+      const updateMap = (aircraft) => {
+        if (!leafletMapRef.current) {
+          console.log('Map not ready yet');
+          return;
+        }
+        
+        console.log('Updating map with', aircraft.length, 'aircraft');
+
+        try {
+          // Clear old markers
+          Object.values(markersRef.current).forEach(marker => {
+            try {
+              marker.remove();
+            } catch (e) {
+              console.warn('Error removing marker:', e);
+            }
+          });
+          markersRef.current = {};
+
+          // Add aircraft markers and flight paths
+          aircraft.forEach(plane => {
+            // Draw flight path
+            const pathCoords = plane.flightPath;
+            L.polyline(pathCoords, {
+              color: '#4c00b0',
+              weight: 2,
+              opacity: 0.4,
+              dashArray: '5, 10'
+            }).addTo(leafletMapRef.current);
+
+            // Custom airplane icon
+            const planeIcon = L.divIcon({
+              className: 'custom-plane-icon',
+              html: `<div style="font-size: 24px; transform: rotate(${getRotation(plane)}deg)">✈️</div>`,
+              iconSize: [30, 30],
+              iconAnchor: [15, 15]
+            });
+
+            // Add aircraft marker
+            const marker = L.marker([plane.position.lat, plane.position.lng], {
+              icon: planeIcon
+            }).addTo(leafletMapRef.current);
+
+            marker.bindPopup(`
+              <strong>${plane.id}</strong><br/>
+              ${plane.model}<br/>
+              ${plane.origin} → ${plane.destination}<br/>
+              Altitude: ${plane.sensors.altitude.toLocaleString()} ft<br/>
+              Speed: ${plane.sensors.speed} mph<br/>
+              Fuel: ${plane.sensors.fuel}%
+            `);
+
+            markersRef.current[plane.id] = marker;
+          });
+          
+          console.log(`Updated ${aircraft.length} aircraft on map`);
+        } catch (error) {
+          console.error('Error updating map:', error);
+        }
+      };
+
+      const getRotation = (plane) => {
+        const origin = { lat: 0, lng: 0 }; // Would calculate from actual origin
+        const dest = plane.position;
+        return Math.atan2(dest.lng - origin.lng, dest.lat - origin.lat) * 180 / Math.PI;
+      };
+
+      const updateCharts = (data) => {
+        // Altitude Chart
+        if (chartsRef.current.altitude) {
+          chartsRef.current.altitude.destroy();
+        }
+        const altCtx = document.getElementById('altitudeChart');
+        if (altCtx) {
+          chartsRef.current.altitude = new Chart(altCtx, {
+            type: 'line',
+            data: {
+              labels: data.map(d => new Date(d.timestamp).toLocaleTimeString()),
+              datasets: [{
+                label: 'Altitude (ft)',
+                data: data.map(d => d.altitude),
+                borderColor: '#4c00b0',
+                backgroundColor: 'rgba(76, 0, 176, 0.1)',
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { display: false }
+              }
+            }
+          });
+        }
+
+        // Fuel Chart
+        if (chartsRef.current.fuel) {
+          chartsRef.current.fuel.destroy();
+        }
+        const fuelCtx = document.getElementById('fuelChart');
+        if (fuelCtx) {
+          chartsRef.current.fuel = new Chart(fuelCtx, {
+            type: 'line',
+            data: {
+              labels: data.map(d => new Date(d.timestamp).toLocaleTimeString()),
+              datasets: [{
+                label: 'Fuel (%)',
+                data: data.map(d => d.fuel),
+                borderColor: '#ff6b00',
+                backgroundColor: 'rgba(255, 107, 0, 0.1)',
+                fill: true,
+                tension: 0.4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: true,
+              plugins: {
+                legend: { display: false }
+              }
+            }
+          });
+        }
+      };
+
+      if (loading) {
+        return <div className="loading">Loading FedEx Air Operations Dashboard... 🚀</div>;
+      }
+
+      return (
+        <div className="app-container">
+          <div className="header">
+            <div className="header-left">
+              <div className="logo">
+                Fed<span className="logo-accent">Ex</span>
+              </div>
+              <div className="header-title">
+                Air Operations | IoT Dashboard
+                <span className="refresh-indicator"></span>
+              </div>
+            </div>
+            <div style={{color: '#fff', fontSize: '14px', opacity: 0.8}}>
+              Powered by Databricks
+            </div>
+          </div>
+
+          {fleetStats && (
+            <div className="stats-bar">
+              <div className="stat-card">
+                <div className="stat-label">Aircraft in Flight</div>
+                <div className="stat-value">{fleetStats.inFlight}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Total Cargo</div>
+                <div className="stat-value">{fleetStats.totalCargo}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Avg Altitude</div>
+                <div className="stat-value">{fleetStats.avgAltitude}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Avg Speed</div>
+                <div className="stat-value">{fleetStats.avgSpeed}</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">Active Alerts</div>
+                <div className="stat-value" style={{color: fleetStats.alerts > 0 ? '#ff6b00' : '#4ade80'}}>
+                  {fleetStats.alerts}
+                </div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-label">On-Time Performance</div>
+                <div className="stat-value">{fleetStats.onTimePerformance}</div>
+              </div>
+            </div>
+          )}
+
+          <div className="main-grid">
+            <div className="map-container">
+              <div className="map-title">
+                🌍 Live Flight Tracking
+                {!mapReady && <span style={{fontSize: '12px', marginLeft: '10px', color: '#999'}}>Loading map...</span>}
+              </div>
+              <div id="map" ref={mapRef}>
+                {!mapReady && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    color: '#666'
+                  }}>
+                    Loading map tiles...
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="aircraft-list">
+              <div className="map-title">✈️ Active Aircraft</div>
+              {aircraftData.map(aircraft => (
+                <div
+                  key={aircraft.id}
+                  className={`aircraft-card ${selectedAircraft?.id === aircraft.id ? 'selected' : ''}`}
+                  onClick={() => setSelectedAircraft(aircraft)}
+                >
+                  <div className="aircraft-id">{aircraft.id}</div>
+                  <div className="aircraft-route">
+                    {aircraft.origin} → {aircraft.destination}
+                  </div>
+                  <div style={{fontSize: '13px', color: '#666', marginBottom: '5px'}}>
+                    {aircraft.model} | {aircraft.cargo}
+                  </div>
+                  <div className="progress-bar">
+                    <div className="progress-fill" style={{width: `${aircraft.progress}%`}}></div>
+                  </div>
+                  <div className="sensor-grid">
+                    <div className="sensor-item">
+                      <span className="sensor-label">Alt: </span>
+                      <span className="sensor-value">{aircraft.sensors.altitude.toLocaleString()} ft</span>
+                    </div>
+                    <div className="sensor-item">
+                      <span className="sensor-label">Speed: </span>
+                      <span className="sensor-value">{aircraft.sensors.speed} mph</span>
+                    </div>
+                    <div className="sensor-item">
+                      <span className="sensor-label">Fuel: </span>
+                      <span className="sensor-value">{aircraft.sensors.fuel}%</span>
+                    </div>
+                    <div className="sensor-item">
+                      <span className="sensor-label">Engine: </span>
+                      <span className="sensor-value">{aircraft.sensors.engineTemp}°F</span>
+                    </div>
+                  </div>
+                  <span className={`status-badge status-${aircraft.status.toLowerCase().replace(' ', '')}`}>
+                    {aircraft.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {selectedAircraft && chartData && (
+            <div className="charts-container">
+              <div className="chart-card">
+                <div className="chart-title">📈 Altitude History - {selectedAircraft.id}</div>
+                <canvas id="altitudeChart"></canvas>
+              </div>
+              <div className="chart-card">
+                <div className="chart-title">⛽ Fuel Consumption - {selectedAircraft.id}</div>
+                <canvas id="fuelChart"></canvas>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
+

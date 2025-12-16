@@ -1,0 +1,16 @@
+{
+  "name": "fedex-air-ops-dashboard",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "FedEx Air Operations IoT Monitoring Dashboard",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5"
+  }
+}
+
