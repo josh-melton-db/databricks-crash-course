@@ -5,16 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FedEx Air Operations | IoT Dashboard</title>
   
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✈️</text></svg>">
+  
   <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-  
-  <!-- React and Babel -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -144,12 +142,21 @@
       position: relative;
     }
     
+    #map-loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #666;
+      font-size: 16px;
+    }
+    
     .custom-plane-icon {
       background: transparent;
       border: none;
     }
     
-    .aircraft-list {
+    .aircraft-list-container {
       background: white;
       border-radius: 15px;
       padding: 20px;
@@ -237,7 +244,7 @@
     }
     
     .charts-container {
-      display: grid;
+      display: none;
       grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
       gap: 25px;
     }
@@ -258,15 +265,6 @@
     
     canvas {
       max-height: 300px;
-    }
-    
-    .loading {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 400px;
-      font-size: 20px;
-      color: white;
     }
     
     .refresh-indicator {
@@ -301,360 +299,55 @@
   </style>
 </head>
 <body>
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect, useRef } = React;
-
-    function App() {
-      const [aircraftData, setAircraftData] = useState([]);
-      const [fleetStats, setFleetStats] = useState(null);
-      const [selectedAircraft, setSelectedAircraft] = useState(null);
-      const [chartData, setChartData] = useState(null);
-      const [loading, setLoading] = useState(true);
-      const [mapReady, setMapReady] = useState(false);
-      const mapRef = useRef(null);
-      const leafletMapRef = useRef(null);
-      const markersRef = useRef({});
-      const chartsRef = useRef({});
-
-      // Initialize map
-      useEffect(() => {
-        // Wait for Leaflet to be fully loaded
-        const initMap = () => {
-          if (typeof L === 'undefined') {
-            setTimeout(initMap, 100);
-            return;
-          }
-          
-          if (!leafletMapRef.current && mapRef.current) {
-            try {
-              leafletMapRef.current = L.map(mapRef.current).setView([30, 0], 2);
-              
-              L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '© OpenStreetMap contributors',
-                maxZoom: 19
-              }).addTo(leafletMapRef.current);
-              
-              setMapReady(true);
-              console.log('Map initialized successfully');
-            } catch (error) {
-              console.error('Error initializing map:', error);
-            }
-          }
-        };
-        
-        setTimeout(initMap, 100);
-      }, []);
-
-      // Fetch data
-      useEffect(() => {
-        const fetchData = async () => {
-          try {
-            const [aircraftRes, statsRes] = await Promise.all([
-              fetch('/api/aircraft'),
-              fetch('/api/fleet/stats')
-            ]);
-            
-            const aircraft = await aircraftRes.json();
-            const stats = await statsRes.json();
-            
-            setAircraftData(aircraft);
-            setFleetStats(stats);
-            setLoading(false);
-          } catch (error) {
-            console.error('Error fetching data:', error);
-          }
-        };
-
-        fetchData();
-        const interval = setInterval(fetchData, 5000); // Update every 5 seconds
-        
-        return () => clearInterval(interval);
-      }, []);
-      
-      // Update map when aircraft data changes AND map is ready
-      useEffect(() => {
-        if (aircraftData.length > 0 && leafletMapRef.current) {
-          updateMap(aircraftData);
-        }
-      }, [aircraftData, mapReady]);
-
-      // Fetch history for selected aircraft
-      useEffect(() => {
-        if (selectedAircraft) {
-          fetch(`/api/aircraft/${selectedAircraft.id}/history`)
-            .then(res => res.json())
-            .then(data => {
-              setChartData(data);
-              updateCharts(data);
-            });
-        }
-      }, [selectedAircraft]);
-
-      const updateMap = (aircraft) => {
-        if (!leafletMapRef.current) {
-          console.log('Map not ready yet');
-          return;
-        }
-        
-        console.log('Updating map with', aircraft.length, 'aircraft');
-
-        try {
-          // Clear old markers
-          Object.values(markersRef.current).forEach(marker => {
-            try {
-              marker.remove();
-            } catch (e) {
-              console.warn('Error removing marker:', e);
-            }
-          });
-          markersRef.current = {};
-
-          // Add aircraft markers and flight paths
-          aircraft.forEach(plane => {
-            // Draw flight path
-            const pathCoords = plane.flightPath;
-            L.polyline(pathCoords, {
-              color: '#4c00b0',
-              weight: 2,
-              opacity: 0.4,
-              dashArray: '5, 10'
-            }).addTo(leafletMapRef.current);
-
-            // Custom airplane icon
-            const planeIcon = L.divIcon({
-              className: 'custom-plane-icon',
-              html: `<div style="font-size: 24px; transform: rotate(${getRotation(plane)}deg)">✈️</div>`,
-              iconSize: [30, 30],
-              iconAnchor: [15, 15]
-            });
-
-            // Add aircraft marker
-            const marker = L.marker([plane.position.lat, plane.position.lng], {
-              icon: planeIcon
-            }).addTo(leafletMapRef.current);
-
-            marker.bindPopup(`
-              <strong>${plane.id}</strong><br/>
-              ${plane.model}<br/>
-              ${plane.origin} → ${plane.destination}<br/>
-              Altitude: ${plane.sensors.altitude.toLocaleString()} ft<br/>
-              Speed: ${plane.sensors.speed} mph<br/>
-              Fuel: ${plane.sensors.fuel}%
-            `);
-
-            markersRef.current[plane.id] = marker;
-          });
-          
-          console.log(`Updated ${aircraft.length} aircraft on map`);
-        } catch (error) {
-          console.error('Error updating map:', error);
-        }
-      };
-
-      const getRotation = (plane) => {
-        const origin = { lat: 0, lng: 0 }; // Would calculate from actual origin
-        const dest = plane.position;
-        return Math.atan2(dest.lng - origin.lng, dest.lat - origin.lat) * 180 / Math.PI;
-      };
-
-      const updateCharts = (data) => {
-        // Altitude Chart
-        if (chartsRef.current.altitude) {
-          chartsRef.current.altitude.destroy();
-        }
-        const altCtx = document.getElementById('altitudeChart');
-        if (altCtx) {
-          chartsRef.current.altitude = new Chart(altCtx, {
-            type: 'line',
-            data: {
-              labels: data.map(d => new Date(d.timestamp).toLocaleTimeString()),
-              datasets: [{
-                label: 'Altitude (ft)',
-                data: data.map(d => d.altitude),
-                borderColor: '#4c00b0',
-                backgroundColor: 'rgba(76, 0, 176, 0.1)',
-                fill: true,
-                tension: 0.4
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: true,
-              plugins: {
-                legend: { display: false }
-              }
-            }
-          });
-        }
-
-        // Fuel Chart
-        if (chartsRef.current.fuel) {
-          chartsRef.current.fuel.destroy();
-        }
-        const fuelCtx = document.getElementById('fuelChart');
-        if (fuelCtx) {
-          chartsRef.current.fuel = new Chart(fuelCtx, {
-            type: 'line',
-            data: {
-              labels: data.map(d => new Date(d.timestamp).toLocaleTimeString()),
-              datasets: [{
-                label: 'Fuel (%)',
-                data: data.map(d => d.fuel),
-                borderColor: '#ff6b00',
-                backgroundColor: 'rgba(255, 107, 0, 0.1)',
-                fill: true,
-                tension: 0.4
-              }]
-            },
-            options: {
-              responsive: true,
-              maintainAspectRatio: true,
-              plugins: {
-                legend: { display: false }
-              }
-            }
-          });
-        }
-      };
-
-      if (loading) {
-        return <div className="loading">Loading FedEx Air Operations Dashboard... 🚀</div>;
-      }
-
-      return (
-        <div className="app-container">
-          <div className="header">
-            <div className="header-left">
-              <div className="logo">
-                Fed<span className="logo-accent">Ex</span>
-              </div>
-              <div className="header-title">
-                Air Operations | IoT Dashboard
-                <span className="refresh-indicator"></span>
-              </div>
-            </div>
-            <div style={{color: '#fff', fontSize: '14px', opacity: 0.8}}>
-              Powered by Databricks
-            </div>
-          </div>
-
-          {fleetStats && (
-            <div className="stats-bar">
-              <div className="stat-card">
-                <div className="stat-label">Aircraft in Flight</div>
-                <div className="stat-value">{fleetStats.inFlight}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-label">Total Cargo</div>
-                <div className="stat-value">{fleetStats.totalCargo}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-label">Avg Altitude</div>
-                <div className="stat-value">{fleetStats.avgAltitude}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-label">Avg Speed</div>
-                <div className="stat-value">{fleetStats.avgSpeed}</div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-label">Active Alerts</div>
-                <div className="stat-value" style={{color: fleetStats.alerts > 0 ? '#ff6b00' : '#4ade80'}}>
-                  {fleetStats.alerts}
-                </div>
-              </div>
-              <div className="stat-card">
-                <div className="stat-label">On-Time Performance</div>
-                <div className="stat-value">{fleetStats.onTimePerformance}</div>
-              </div>
-            </div>
-          )}
-
-          <div className="main-grid">
-            <div className="map-container">
-              <div className="map-title">
-                🌍 Live Flight Tracking
-                {!mapReady && <span style={{fontSize: '12px', marginLeft: '10px', color: '#999'}}>Loading map...</span>}
-              </div>
-              <div id="map" ref={mapRef}>
-                {!mapReady && (
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    height: '100%',
-                    color: '#666'
-                  }}>
-                    Loading map tiles...
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="aircraft-list">
-              <div className="map-title">✈️ Active Aircraft</div>
-              {aircraftData.map(aircraft => (
-                <div
-                  key={aircraft.id}
-                  className={`aircraft-card ${selectedAircraft?.id === aircraft.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedAircraft(aircraft)}
-                >
-                  <div className="aircraft-id">{aircraft.id}</div>
-                  <div className="aircraft-route">
-                    {aircraft.origin} → {aircraft.destination}
-                  </div>
-                  <div style={{fontSize: '13px', color: '#666', marginBottom: '5px'}}>
-                    {aircraft.model} | {aircraft.cargo}
-                  </div>
-                  <div className="progress-bar">
-                    <div className="progress-fill" style={{width: `${aircraft.progress}%`}}></div>
-                  </div>
-                  <div className="sensor-grid">
-                    <div className="sensor-item">
-                      <span className="sensor-label">Alt: </span>
-                      <span className="sensor-value">{aircraft.sensors.altitude.toLocaleString()} ft</span>
-                    </div>
-                    <div className="sensor-item">
-                      <span className="sensor-label">Speed: </span>
-                      <span className="sensor-value">{aircraft.sensors.speed} mph</span>
-                    </div>
-                    <div className="sensor-item">
-                      <span className="sensor-label">Fuel: </span>
-                      <span className="sensor-value">{aircraft.sensors.fuel}%</span>
-                    </div>
-                    <div className="sensor-item">
-                      <span className="sensor-label">Engine: </span>
-                      <span className="sensor-value">{aircraft.sensors.engineTemp}°F</span>
-                    </div>
-                  </div>
-                  <span className={`status-badge status-${aircraft.status.toLowerCase().replace(' ', '')}`}>
-                    {aircraft.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {selectedAircraft && chartData && (
-            <div className="charts-container">
-              <div className="chart-card">
-                <div className="chart-title">📈 Altitude History - {selectedAircraft.id}</div>
-                <canvas id="altitudeChart"></canvas>
-              </div>
-              <div className="chart-card">
-                <div className="chart-title">⛽ Fuel Consumption - {selectedAircraft.id}</div>
-                <canvas id="fuelChart"></canvas>
-              </div>
-            </div>
-          )}
+  <div class="app-container">
+    <div class="header">
+      <div class="header-left">
+        <div class="logo">
+          Fed<span class="logo-accent">Ex</span>
         </div>
-      );
-    }
+        <div class="header-title">
+          Air Operations | IoT Dashboard
+          <span class="refresh-indicator"></span>
+        </div>
+      </div>
+      <div style="color: #fff; font-size: 14px; opacity: 0.8;">
+        Powered by Databricks
+      </div>
+    </div>
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+    <div id="stats-bar" class="stats-bar">
+      <!-- Stats will be populated by JavaScript -->
+    </div>
+
+    <div class="main-grid">
+      <div class="map-container">
+        <div class="map-title">🌍 Live Flight Tracking</div>
+        <div id="map">
+          <div id="map-loading">Loading map tiles...</div>
+        </div>
+      </div>
+
+      <div class="aircraft-list-container">
+        <div class="map-title">✈️ Active Aircraft</div>
+        <div id="aircraft-list">
+          <!-- Aircraft cards will be populated by JavaScript -->
+        </div>
+      </div>
+    </div>
+
+    <div id="charts-container" class="charts-container">
+      <div class="chart-card">
+        <div class="chart-title">📈 Altitude History</div>
+        <canvas id="altitudeChart"></canvas>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">⛽ Fuel Consumption</div>
+        <canvas id="fuelChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load our vanilla JS app (no Babel needed) -->
+  <script src="/static/app.js"></script>
 </body>
 </html>
-
