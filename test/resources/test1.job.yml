@@ -1,0 +1,26 @@
+resources:
+  jobs:
+    hello_dabs:
+      name: hello_dabs
+      tasks:
+        - task_key: notebook_task
+          notebook_task:
+            notebook_path: /Workspace/Users/josh.melton@databricks.com/.bundle/hello_dabs/prod/files/notebooks/hello_dabs
+            source: WORKSPACE
+      queue:
+        enabled: true
+      run_as:
+        user_name: josh.melton@databricks.com
+
+      # tasks:
+      #   - task_key: notebook_task
+      #     notebook_task:
+      #       notebook_path: ../path/to/notebook.ipynb
+      # email_notifications:
+      #   on_failure:
+      #     - josh.melton@databricks.com
+      # trigger:
+      #   # Run this job every day, exactly one day from the last run; see https://docs.databricks.com/api/workspace/jobs/create#trigger
+      #   periodic:
+      #     interval: 1
+      #     unit: DAYS
