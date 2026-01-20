@@ -23,7 +23,7 @@
 
 # DBTITLE 1,Configuration
 # Configure your catalog and schema here
-CATALOG = 'dwx_airops_insights_platform_dev_working'  # Change to your catalog name
+CATALOG = 'dwx_express_insights_platform_dev_working'  # Change to your catalog name
 SCHEMA = 'db_crash_course'  # Leave as None to auto-generate, or set to your schema name
 
 # Data generation parameters
