@@ -77,10 +77,14 @@ print(f"  ✓ Created volume: {CATALOG}.{SCHEMA}.inspection_data")
 spark.sql(f"CREATE VOLUME {CATALOG}.{SCHEMA}.checkpoints")
 print(f"  ✓ Created volume: {CATALOG}.{SCHEMA}.checkpoints")
 
+spark.sql(f"CREATE VOLUME {CATALOG}.{SCHEMA}.pdf_documents")
+print(f"  ✓ Created volume: {CATALOG}.{SCHEMA}.pdf_documents")
+
 # Set paths
 SENSOR_LANDING = f"/Volumes/{CATALOG}/{SCHEMA}/sensor_data"
 INSPECTION_LANDING = f"/Volumes/{CATALOG}/{SCHEMA}/inspection_data"
 CHECKPOINT_PATH = f"/Volumes/{CATALOG}/{SCHEMA}/checkpoints"
+PDF_VOLUME_PATH = f"/Volumes/{CATALOG}/{SCHEMA}/pdf_documents"
 
 print("\n✅ Schema and volumes created successfully!")
 
@@ -356,6 +360,31 @@ print(f"  ✓ Sensor data written to: {SENSOR_LANDING}")
 # Write inspection data as CSV files
 defect_data.write.mode('overwrite').csv(INSPECTION_LANDING, header='true')
 print(f"  ✓ Inspection data written to: {INSPECTION_LANDING}")
+
+# Upload PDF documents to volume
+print("\nUploading PDF documents to volume...")
+import os
+
+pdf_source_dir = "setup/pdf"
+pdf_count = 0
+
+if os.path.exists(pdf_source_dir):
+    for pdf_file in os.listdir(pdf_source_dir):
+        if pdf_file.endswith('.pdf'):
+            local_path = os.path.join(pdf_source_dir, pdf_file)
+            volume_file_path = f"{PDF_VOLUME_PATH}/{pdf_file}"
+            
+            # Read the file and upload using workspace client
+            with open(local_path, 'rb') as f:
+                file_content = f.read()
+                w.files.upload(volume_file_path, file_content, overwrite=True)
+            
+            pdf_count += 1
+            print(f"  ✓ Uploaded: {pdf_file}")
+    
+    print(f"  Total PDFs uploaded: {pdf_count}")
+else:
+    print(f"  ⚠ Warning: PDF directory not found at {pdf_source_dir}")
 
 # Clean up temp data
 dbutils.fs.rm(f"{CHECKPOINT_PATH}/tmp", recurse=True)
@@ -810,6 +839,7 @@ print(f"\n📁 Data Volumes:")
 print(f"    • {SENSOR_LANDING}")
 print(f"    • {INSPECTION_LANDING}")
 print(f"    • {CHECKPOINT_PATH}")
+print(f"    • {PDF_VOLUME_PATH} ({pdf_count} PDF documents)")
 print(f"\n🔑 Data Model:")
 print(f"    Star schema with fact tables (sensor_bronze, inspection_bronze)")
 print(f"    referencing dimension tables (dim_devices, dim_factories, dim_models)")
