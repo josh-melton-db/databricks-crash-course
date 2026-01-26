@@ -365,7 +365,7 @@ print(f"  ✓ Inspection data written to: {INSPECTION_LANDING}")
 print("\nUploading PDF documents to volume...")
 import os
 
-pdf_source_dir = "setup/pdf"
+pdf_source_dir = "pdf"
 pdf_count = 0
 
 if os.path.exists(pdf_source_dir):
@@ -374,10 +374,9 @@ if os.path.exists(pdf_source_dir):
             local_path = os.path.join(pdf_source_dir, pdf_file)
             volume_file_path = f"{PDF_VOLUME_PATH}/{pdf_file}"
             
-            # Read the file and upload using workspace client
+            # Upload using workspace client - pass file object directly
             with open(local_path, 'rb') as f:
-                file_content = f.read()
-                w.files.upload(volume_file_path, file_content, overwrite=True)
+                w.files.upload(volume_file_path, f, overwrite=True)
             
             pdf_count += 1
             print(f"  ✓ Uploaded: {pdf_file}")
