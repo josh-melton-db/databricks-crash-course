@@ -23,7 +23,7 @@
 
 # DBTITLE 1,Configuration
 # Configure your catalog and schema here
-CATALOG = 'dwx_express_insights_platform_dev_working'  # Change to your catalog name
+CATALOG = 'dwx_marketing_insights_platform_dev_working'  # Change to your catalog name
 SCHEMA = 'db_crash_course'  # Leave as None to auto-generate, or set to your schema name
 
 # Data generation parameters
@@ -361,6 +361,15 @@ print(f"  ✓ Sensor data written to: {SENSOR_LANDING}")
 defect_data.write.mode('overwrite').csv(INSPECTION_LANDING, header='true')
 print(f"  ✓ Inspection data written to: {INSPECTION_LANDING}")
 
+
+
+# Clean up temp data
+dbutils.fs.rm(f"{CHECKPOINT_PATH}/tmp", recurse=True)
+
+print("\n✅ Data landing complete!")
+
+# COMMAND ----------
+
 # Upload PDF documents to volume
 print("\nUploading PDF documents to volume...")
 import os
@@ -384,11 +393,6 @@ if os.path.exists(pdf_source_dir):
     print(f"  Total PDFs uploaded: {pdf_count}")
 else:
     print(f"  ⚠ Warning: PDF directory not found at {pdf_source_dir}")
-
-# Clean up temp data
-dbutils.fs.rm(f"{CHECKPOINT_PATH}/tmp", recurse=True)
-
-print("\n✅ Data landing complete!")
 
 # COMMAND ----------
 
