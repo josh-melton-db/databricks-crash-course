@@ -266,14 +266,6 @@ ORDER BY defect_rate_pct DESC;
 - Reduce NUM_ROWS and NUM_DEVICES
 - Use larger cluster
 
-## Authors
-
-josh.melton@databricks.com
-
-## License
-
-&copy; 2025 Databricks, Inc. All rights reserved. The source in this notebook is provided subject to the Databricks License [https://databricks.com/db-license-source].
-
 ---
 
 **Ready to begin?** Start with [setup/setup_and_run.py](setup/) to create your training environment! 🚀

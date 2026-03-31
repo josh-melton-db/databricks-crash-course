@@ -142,9 +142,7 @@ SCHEMA = 'my_custom_schema'  # Instead of auto-generated
 
 ---
 
-**That's it!** You have a complete IoT time series pipeline with Bronze/Silver/Gold tables in Unity Catalog. 
-
-Questions? → josh.melton@databricks.com
+**That's it!** You have a complete IoT time series pipeline with Bronze/Silver/Gold tables in Unity Catalog.
 
 
 
