@@ -34,7 +34,7 @@ A hands-on, three-day training program covering the full Databricks Data Intelli
 | 10:00 | **Dashboards Deep Dive** | Advanced dashboard parameters and filters | 2 Dashboards Deep Dive |
 | 11:00 | **Genie Deep Dive** | Configure AI chat with custom context | 3 Genie Deep Dive |
 | 12:00 | *Lunch* | | |
-| 1:00  | **AutoML** | No-code machine learning | 4 AutoML |
+| 1:00  | **Agent Bricks** | Build GenAI applications with Knowledge Assistants and Genie | 4 Agent Bricks |
 | 2:00  | **MLflow and MLOps** | Model tracking and lifecycle management | 5 MLflow and MLops |
 | 3:00  | **ML and AI Inference** | Batch, streaming, and real-time predictions | 6 ML and AI Inference |
 
@@ -42,9 +42,12 @@ A hands-on, three-day training program covering the full Databricks Data Intelli
 
 | Time  | Session | Description | Notebook |
 |-------|---------|-------------|----------|
-| 8:30  | **CI/CD and DevOps** | Version control and deployment basics | 1 CI_CD and DevOps |
-| 10:00 | **Performance Tuning** | SQL and table optimization with liquid clustering | 2 Performance Tuning |
-| 11:00 | **Monitor and Govern** | System tables, costs, and governance | 3 Monitor and Govern |
+| 8:30  | **EDA** | Exploratory data analysis patterns | 0 EDA |
+| 9:30  | **Apps** | Build and deploy Databricks Apps | 1 Apps |
+| 10:30 | **Performance Tuning** | SQL and table optimization with liquid clustering | 2 Performance Tuning |
+| 11:30 | **CI/CD and DevOps** | Version control and deployment basics | 3 CI_CD and DevOps |
+| 12:00 | *Lunch* | | |
+| 1:00  | **Monitor and Govern** | System tables, costs, and governance | 4 Monitor and Govern |
 
 ## Project Structure
 
@@ -70,13 +73,15 @@ iot_time_series_analysis/
 │   ├── 1 Semantic Modeling.ipynb
 │   ├── 2 Dashboards Deep Dive.ipynb
 │   ├── 3 Genie Deep Dive.ipynb
-│   ├── 4 AutoML.ipynb
+│   ├── 4 Agent Bricks.ipynb
 │   ├── 5 MLflow and MLops.ipynb
 │   └── 6 ML and AI Inference.ipynb
 ├── Day 3/                             # Production & Operations
-│   ├── 1 CI_CD and DevOps.ipynb
+│   ├── 0 EDA.ipynb
+│   ├── 1 Apps.ipynb
 │   ├── 2 Performance Tuning.ipynb
-│   └── 3 Monitor and Govern.ipynb
+│   ├── 3 CI_CD and DevOps.ipynb
+│   └── 4 Monitor and Govern.ipynb
 ├── DATA_MODEL.md                      # Schema documentation
 └── SCHEMA_CHANGES.md                  # PK/FK relationships
 ```
@@ -146,12 +151,14 @@ The training uses realistic IoT sensor data from manufacturing equipment (jet en
 - Semantic layers for metric reusability
 - Advanced dashboard features with parameters
 - Configure AI-powered chat with custom context
-- Train and deploy machine learning models
+- Build GenAI applications with Agent Bricks
 - Full ML lifecycle with MLflow and inference
 
 **Day 3** covers production operations:
-- Version control and CI/CD basics
+- Exploratory data analysis patterns
+- Build and deploy Databricks Apps
 - Performance optimization with liquid clustering
+- Version control and CI/CD basics
 - System monitoring with system tables
 - Cost analysis and governance policies
 
@@ -206,10 +213,9 @@ ORDER BY defect_rate_pct DESC;
 - **MLflow**: ML experiment tracking and model registry
 - **Lakeflow**: Visual ETL and workflow design
 - **Genie**: AI-powered data chat
-- **AutoML**: Automated machine learning
+- **Agent Bricks**: GenAI application framework (Knowledge Assistants, Genie Spaces)
 - **Lakeview**: Dashboard and BI
 - **Workflows**: Job orchestration
-- **Agent Bricks**: GenAI application framework
 
 ## Daily Objectives
 
@@ -225,17 +231,18 @@ ORDER BY defect_rate_pct DESC;
 - Design semantic models with metric definitions
 - Build advanced dashboards with parameters and filters
 - Configure Genie with custom context and SQL examples
-- Train ML models with no-code AutoML
+- Build GenAI applications with Agent Bricks (Knowledge Assistants and Genie Spaces)
 - Track experiments and manage models with MLflow
 - Deploy models for batch, streaming, and real-time inference
 
 ### Day 3 Objectives
-- Implement version control and CI/CD basics
+- Perform exploratory data analysis
+- Build and deploy Databricks Apps
 - Optimize queries with liquid clustering and performance tuning
+- Implement version control and CI/CD basics
 - Monitor system health using system tables
 - Analyze and control costs
 - Implement governance policies with Unity Catalog
-- Troubleshoot common issues
 
 ## Support & Resources
 
